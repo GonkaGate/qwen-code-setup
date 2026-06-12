@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/GonkaGate/qwen-code-setup/compare/v0.1.0...v0.2.0) (2026-06-12)
+
+
+### Features
+
+* implement qwen code setup runtime ([db0f2b6](https://github.com/GonkaGate/qwen-code-setup/commit/db0f2b65e71eb97d22f92a02112af17a3963921b))
+
 ## 0.1.0
 
 - Bootstrap the public `@gonkagate/qwen-code-setup` repository scaffold.
