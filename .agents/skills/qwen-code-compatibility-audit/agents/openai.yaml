@@ -1,0 +1,4 @@
+interface:
+  display_name: "Qwen Code Compatibility Audit"
+  short_description: "Audit Qwen Code setup compatibility."
+  default_prompt: "Audit current Qwen Code custom provider compatibility for qwen-code-setup using upstream docs, npm metadata, and source/config evidence before recommending implementation steps."
