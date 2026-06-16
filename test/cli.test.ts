@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { runCli } from "../src/cli.js";
+import { QWEN_CODE_SETUP_CONTRACT } from "../src/constants/contract.js";
 import { getRequiredGonkagateModelIds } from "../src/constants/models.js";
 import { createFakeInstallDependencies } from "./install/test-deps.js";
 
@@ -297,6 +298,9 @@ test("CLI renders help and version without installer execution", async () => {
   });
 
   assert.equal(version.exitCode, 0);
-  assert.match(versionStdout.text(), /0\.1\.0/);
+  assert.equal(
+    versionStdout.text(),
+    `${QWEN_CODE_SETUP_CONTRACT.packageVersion}\n`,
+  );
   assert.equal(versionStderr.text(), "");
 });

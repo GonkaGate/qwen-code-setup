@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { QWEN_CODE_SETUP_CONTRACT } from "../../src/constants/contract.js";
 import { getRequiredGonkagateModelIds } from "../../src/constants/models.js";
 import {
   createInstallState,
@@ -15,7 +16,7 @@ test("install state records runtime ownership metadata", () => {
     verifiedAt: "2026-06-12T00:00:00.000Z",
   });
 
-  assert.equal(state.installerVersion, "0.1.0");
+  assert.equal(state.installerVersion, QWEN_CODE_SETUP_CONTRACT.packageVersion);
   assert.equal(state.auditedQwenVersion, "0.18.0");
   assert.equal(state.scope, "project");
   assert.equal(state.selectedModelKey, "kimi-k2.6");

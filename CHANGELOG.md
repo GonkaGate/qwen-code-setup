@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.0](https://github.com/GonkaGate/qwen-code-setup/compare/v0.1.0...v0.2.0) (2026-06-16)
+
+### Features
+
+- implement qwen code setup runtime ([0449330](https://github.com/GonkaGate/qwen-code-setup/commit/0449330c2a557b2654406b9bd709dfe7932b773b))
+- improve qwen code developer onboarding ([18ec322](https://github.com/GonkaGate/qwen-code-setup/commit/18ec3224c354f5fd31b8a9035eb075df52b4144a))
+- improve qwen code developer onboarding ([ce4f8f4](https://github.com/GonkaGate/qwen-code-setup/commit/ce4f8f4cc6b5c3b69a280307a39e599f6e231a50))
+
 ## 0.1.0
 
 - Bootstrap the public `@gonkagate/qwen-code-setup` repository scaffold.
