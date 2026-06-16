@@ -1,6 +1,7 @@
-# @gonkagate/qwen-code-setup
+# Qwen Code Setup for GonkaGate
 
-Set up local Qwen Code to use GonkaGate in one `npx` command.
+Configure Qwen Code to use GonkaGate as an OpenAI-compatible provider with one
+developer-friendly `npx` command.
 
 ```bash
 npx @gonkagate/qwen-code-setup
@@ -15,32 +16,52 @@ npx @gonkagate/qwen-code-setup
 [![Docs](https://img.shields.io/badge/Docs-API%20Guides-2563EB?style=flat-square)](https://gonkagate.com/en/docs)
 [![API%20Key](https://img.shields.io/badge/API%20Key-Dashboard-F97316?style=flat-square)](https://gonkagate.com/en/register)
 
-## Current State
+`@gonkagate/qwen-code-setup` is a public CLI installer for developers who want
+Qwen Code to route chat completions through the GonkaGate API without manually
+editing Qwen settings JSON.
 
-This repository provides the public onboarding CLI for configuring `qwen` to
-use GonkaGate as an OpenAI-compatible provider.
+## Quick Start
 
-The runtime is implemented. It detects Qwen Code, safely collects or reuses a
-GonkaGate key, confirms the required model catalog through authenticated
-`/v1/models`, writes managed Qwen Code settings with backups and rollback,
-verifies locally inspectable durable state, reports current-session shadowing,
-and supports redacted human and JSON output.
+```bash
+npx @gonkagate/qwen-code-setup
+```
 
-## Intended Public Flow
+You need:
+
+- Node.js `>=22.14.0`
+- Qwen Code installed as `qwen`
+- a GonkaGate API key from the dashboard
+
+The runtime is implemented. It writes managed Qwen Code settings after
+validating Qwen Code, collecting the key through safe inputs, checking the
+GonkaGate model catalog, verifying the local result, and keeping output
+redacted.
+
+## What It Does
 
 The happy path is:
 
-1. user runs `npx @gonkagate/qwen-code-setup`
-2. installer validates local `qwen`
-3. installer collects a GonkaGate `gp-...` key through safe inputs
-4. installer makes a separate authenticated `/v1/models` request to GonkaGate
-5. installer confirms all three supported GonkaGate models are available
-6. installer offers the public model picker
-7. installer writes the minimum Qwen Code settings needed for GonkaGate,
-   including all three models in `modelProviders.openai[]`
-8. installer verifies the durable local Qwen Code outcome and reports
-   current-session shadowing when relevant
-9. user returns to plain `qwen`
+1. Detects the local `qwen` binary and verifies the audited Qwen Code baseline.
+2. Collects or reuses `GONKAGATE_API_KEY` without printing the secret.
+3. Calls authenticated `GET https://api.gonkagate.com/v1/models`.
+4. Requires all supported GonkaGate models before writing config.
+5. Writes the GonkaGate provider into `modelProviders.openai[]`.
+6. Sets `security.auth.selectedType = "openai"` and `model.name`.
+7. Stores the durable key reference at `settings.env.GONKAGATE_API_KEY`.
+8. Creates backups, rolls back on failure, and reports current-session
+   environment shadowing when relevant.
+
+Use `--dry-run` to inspect planned writes before changing local Qwen Code
+settings. Use `--json` for machine-readable, redacted output.
+
+## Supported Models
+
+The installer only offers models that are present in GonkaGate's authenticated
+model catalog:
+
+- `qwen/qwen3-235b-a22b-instruct-2507-fp8`
+- `moonshotai/Kimi-K2.6`
+- `minimaxai/minimax-m2.7`
 
 ## Known Qwen Code Baseline
 
@@ -66,22 +87,22 @@ semantics. User-scope provider catalog writes are managed in user settings.
 Project scope writes only activation settings and blocks if project
 `modelProviders` would hide user-managed providers.
 
-The supported v1 GonkaGate model set is:
+## Security
 
-- `qwen/qwen3-235b-a22b-instruct-2507-fp8`
-- `moonshotai/Kimi-K2.6`
-- `minimaxai/minimax-m2.7`
+The installer is designed for local developer machines and keeps secrets out of
+plain command history.
 
-## Security Position
-
-The installer must never print a GonkaGate key and must not accept secrets
-through a plain `--api-key` flag.
-
-Safe secret inputs are intended to stay aligned with the OpenCode installer:
+Allowed secret inputs:
 
 - hidden interactive prompt
 - `GONKAGATE_API_KEY`
 - `--api-key-stdin`
+
+Not allowed:
+
+- plain `--api-key`
+- shell profile mutation
+- repository-local secret storage
 
 The v1 durable secret target is user-level
 `settings.env.GONKAGATE_API_KEY` inside the active Qwen settings file. Unlike
@@ -94,26 +115,52 @@ Default setup success is based on bounded local verification, not a live model
 call. `--verify-live` is available only as an explicit opt-in and may spend
 quota or depend on provider/network availability.
 
-Use `--dry-run` to see planned managed files and blockers without writing Qwen
-settings, backups, or install state.
+## Local Development
 
-## Development
+Install and run the full contract suite:
 
 ```bash
-npm install
+npm ci
 npm run ci
 ```
 
-Useful commands:
+Useful focused checks:
 
 ```bash
+npm run build
 npm run typecheck
 npm run test
 npm run format:check
 npm run package:check
+npm pack --dry-run
 ```
 
-## Important Documents
+Run the CLI from source:
+
+```bash
+npm run dev -- --dry-run
+```
+
+## Release Flow
+
+This repository uses Release Please and npm trusted publishing.
+
+For changes that should create a release, use a releasable Conventional Commit:
+
+```bash
+feat: improve qwen code developer onboarding
+```
+
+After that commit lands on `main`, Release Please opens a release PR that bumps
+`package.json`, `.release-please-manifest.json`, `CHANGELOG.md`, and
+`src/constants/contract.ts`. When that release PR is merged, GitHub Actions
+publishes to npm with provenance.
+
+Use `fix:` for patch releases and `feat:` for minor releases. Non-releasable
+commits such as `docs:` are useful for internal cleanup, but they should not be
+used when the change is intentionally testing the release pipeline.
+
+## Docs
 
 - [Product spec](docs/specs/qwen-code-setup-prd/spec.md)
 - [How it works](docs/how-it-works.md)

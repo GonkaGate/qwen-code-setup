@@ -1,7 +1,7 @@
 {
   "name": "@gonkagate/qwen-code-setup",
   "version": "0.1.0",
-  "description": "Onboarding CLI for configuring Qwen Code to use GonkaGate as an OpenAI-compatible provider.",
+  "description": "Developer CLI for configuring Qwen Code to use GonkaGate as an OpenAI-compatible provider.",
   "homepage": "https://github.com/GonkaGate/qwen-code-setup#readme",
   "bugs": {
     "url": "https://github.com/GonkaGate/qwen-code-setup/issues"
@@ -39,12 +39,16 @@
   },
   "keywords": [
     "gonkagate",
+    "gonkagate api",
     "qwen",
     "qwen code",
+    "qwen-code",
     "installer",
     "cli",
     "custom provider",
-    "openai compatible"
+    "openai compatible",
+    "openai-compatible",
+    "ai cli"
   ],
   "license": "Apache-2.0",
   "packageManager": "npm@11.11.1",
