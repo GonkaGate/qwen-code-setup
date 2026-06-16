@@ -48,6 +48,10 @@ test("package metadata follows the public qwen-code-setup contract", () => {
 });
 
 test("contract constants record shipped runtime state and Qwen Code baseline", () => {
+  const packageJson = JSON.parse(readText("package.json")) as {
+    version?: string;
+  };
+
   assert.equal(
     QWEN_CODE_SETUP_CONTRACT.publicEntrypoint,
     "npx @gonkagate/qwen-code-setup",
@@ -57,7 +61,7 @@ test("contract constants record shipped runtime state and Qwen Code baseline", (
     "@qwen-code/qwen-code",
   );
   assert.equal(QWEN_CODE_SETUP_CONTRACT.qwenBinaryName, "qwen");
-  assert.equal(QWEN_CODE_SETUP_CONTRACT.packageVersion, "0.1.0");
+  assert.equal(QWEN_CODE_SETUP_CONTRACT.packageVersion, packageJson.version);
   assert.equal(QWEN_CODE_SETUP_CONTRACT.runtimeImplemented, true);
   assert.equal(QWEN_CODE_SETUP_CONTRACT.curatedRegistryPublished, true);
   assert.equal(QWEN_CODE_SETUP_CONTRACT.requiredGonkagateModelCount, 3);
