@@ -62,17 +62,8 @@ export async function detectQwen(
     if (version === undefined) {
       return {
         ok: false,
-        blocker: unsupportedVersionBlocker(
+        blocker: unparseableVersionBlocker(
           "Unable to parse qwen version from --version output.",
-        ),
-      };
-    }
-
-    if (version !== QWEN_CODE_SETUP_CONTRACT.latestAuditedQwenCodeVersion) {
-      return {
-        ok: false,
-        blocker: unsupportedVersionBlocker(
-          `Found qwen ${version}; audited support is ${QWEN_CODE_SETUP_CONTRACT.latestAuditedQwenCodeVersion}.`,
         ),
       };
     }
@@ -127,12 +118,12 @@ function qwenNotFoundBlocker(detail: string): InstallBlocker {
   });
 }
 
-function unsupportedVersionBlocker(detail: string): InstallBlocker {
+function unparseableVersionBlocker(detail: string): InstallBlocker {
   return createBlocker({
-    code: "qwen_version_unsupported",
+    code: "qwen_version_unparseable",
     layer: "qwen-detection",
     message: redactSecrets(detail),
     nextAction:
-      "Use the audited @qwen-code/qwen-code version or rerun the compatibility audit before enabling setup.",
+      "Check that `qwen --version` prints a semantic version, then rerun setup.",
   });
 }

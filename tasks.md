@@ -486,7 +486,7 @@ safe smoke commands and version/source evidence.
 **Acceptance criteria:**
 
 - [x] Missing `qwen` fails with `qwen_not_found`.
-- [x] Unsupported Qwen versions fail with `qwen_version_unsupported`.
+- [x] Unparseable Qwen version output fails with `qwen_version_unparseable`.
 - [x] The detector records package, binary, version, Node engine expectations,
       and audited config semantics.
 - [x] Interactive `/doctor` is not treated as the success gate.

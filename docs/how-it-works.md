@@ -18,7 +18,9 @@ The current Qwen Code compatibility baseline is
 `@qwen-code/qwen-code` `0.18.0`, audited on June 12, 2026 with a
 `CONCERNS` verdict. The user-scope provider contract is viable, but project
 scope must stay gated because Qwen Code currently marks `modelProviders` with
-`replace` merge semantics.
+`replace` merge semantics. Newer Qwen Code versions are not blocked solely
+because they are newer; actual setup and verification checks should surface
+runtime incompatibilities.
 
 ## Intended Runtime Flow
 
@@ -26,7 +28,7 @@ The runtime:
 
 1. Resolve the current platform and home directory.
 2. Detect `qwen` on `PATH`.
-3. Verify the local Qwen Code version and config semantics.
+3. Parse and record the local Qwen Code version.
 4. Collect the GonkaGate API key through a safe input.
 5. Fetch `https://api.gonkagate.com/v1/models` with that key.
 6. Confirm all three supported GonkaGate models are available.

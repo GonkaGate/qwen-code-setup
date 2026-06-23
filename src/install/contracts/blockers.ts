@@ -1,6 +1,6 @@
 export const PRD_INSTALL_BLOCKER_CODES = [
   "qwen_not_found",
-  "qwen_version_unsupported",
+  "qwen_version_unparseable",
   "settings_parse_failed",
   "managed_write_failed",
   "model_conflict",

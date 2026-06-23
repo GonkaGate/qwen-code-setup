@@ -18,7 +18,7 @@ function commandRunner(
   };
 }
 
-test("qwen detector records supported audited version and config semantics", async () => {
+test("qwen detector records installed version and config semantics", async () => {
   const calls: Array<{ command: string; args: readonly string[] }> = [];
   const deps = createFakeInstallDependencies({
     commands: commandRunner(async (command, args) => {
@@ -51,6 +51,25 @@ test("qwen detector records supported audited version and config semantics", asy
   }
 });
 
+test("qwen detector allows versions newer than the audited metadata", async () => {
+  const result = await detectQwen(
+    createFakeInstallDependencies({
+      commands: commandRunner(async () => ({
+        exitCode: 0,
+        signal: null,
+        stdout: "qwen 0.19.0\n",
+        stderr: "",
+      })),
+    }),
+  );
+
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.equal(result.evidence.version, "0.19.0");
+    assert.equal(result.evidence.supportedVersion, "0.18.0");
+  }
+});
+
 test("qwen detector blocks when command is missing or fails", async () => {
   const missing = await detectQwen(
     createFakeInstallDependencies({
@@ -80,24 +99,22 @@ test("qwen detector blocks when command is missing or fails", async () => {
   }
 });
 
-test("qwen detector blocks unsupported and unexpected version output", async () => {
-  for (const stdout of ["0.17.1\n", "Qwen Code dev build\n"]) {
-    const result = await detectQwen(
-      createFakeInstallDependencies({
-        commands: commandRunner(async () => ({
-          exitCode: 0,
-          signal: null,
-          stdout,
-          stderr: "",
-        })),
-      }),
-    );
+test("qwen detector blocks unexpected version output", async () => {
+  const result = await detectQwen(
+    createFakeInstallDependencies({
+      commands: commandRunner(async () => ({
+        exitCode: 0,
+        signal: null,
+        stdout: "Qwen Code dev build\n",
+        stderr: "",
+      })),
+    }),
+  );
 
-    assert.equal(result.ok, false);
-    if (!result.ok) {
-      assert.equal(result.blocker.code, "qwen_version_unsupported");
-      assert.equal(result.blocker.layer, "qwen-detection");
-    }
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.blocker.code, "qwen_version_unparseable");
+    assert.equal(result.blocker.layer, "qwen-detection");
   }
 });
 

@@ -10,8 +10,7 @@ Read:
 - `docs/specs/qwen-code-setup-prd/spec.md`
 - relevant docs under `docs/`
 
-Mention that the runtime is not implemented unless the task explicitly builds
-it.
+Mention that the runtime is implemented when runtime behavior is relevant.
 
 ## Qwen Code Compatibility
 
@@ -30,8 +29,6 @@ Use `qwen-code-compatibility-audit` when the request depends on:
 Read:
 
 - `src/cli.ts`
+- `src/install/`
 - `src/constants/`
 - relevant tests under `test/`
-
-For future runtime work, expect new modules under `src/install/`, but do not
-pretend those files already exist.

@@ -4,7 +4,7 @@
     "prompt": "Normalize this into a handoff prompt: we need to implement qwen-code-setup like opencode-setup, but qwen uses ~/.qwen/settings.json, modelProviders.openai[], envKey, and /doctor. Don't code yet, make a planning prompt.",
     "expectations": [
       "The output preserves qwen-code-setup, ~/.qwen/settings.json, modelProviders.openai[], envKey, and /doctor verbatim.",
-      "The output says the runtime is not implemented yet.",
+      "The output says the runtime is implemented.",
       "The output routes to planning and compatibility audit before implementation."
     ]
   }

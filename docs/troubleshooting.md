@@ -27,8 +27,8 @@ claims.
 
 - `qwen_not_found`: install `@qwen-code/qwen-code` and ensure `qwen` is on
   `PATH`.
-- `qwen_version_unsupported`: use the audited Qwen Code version or rerun the
-  compatibility audit before changing runtime assumptions.
+- `qwen_version_unparseable`: check that `qwen --version` prints a semantic
+  version, then rerun setup.
 - `settings_parse_failed`: fix malformed Qwen settings JSON/JSONC.
 - `managed_write_failed`: inspect filesystem permissions and backup/rollback
   paths.
