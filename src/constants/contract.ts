@@ -1,6 +1,6 @@
 export const QWEN_CODE_SETUP_CONTRACT = {
   packageName: "@gonkagate/qwen-code-setup",
-  packageVersion: "0.2.0", // x-release-please-version
+  packageVersion: "0.2.1", // x-release-please-version
   publicEntrypoint: "npx @gonkagate/qwen-code-setup",
   binaryName: "gonkagate-qwen-code",
   binaryAliases: ["gonkagate-qwen-code", "qwen-code-setup"],

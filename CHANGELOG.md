@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1](https://github.com/GonkaGate/qwen-code-setup/compare/v0.2.0...v0.2.1) (2026-06-23)
+
+
+### Bug Fixes
+
+* allow future Qwen Code versions ([676d44d](https://github.com/GonkaGate/qwen-code-setup/commit/676d44d7a0181f82c22b3c584652cd642879eca0))
+* allow future Qwen Code versions ([e084d4e](https://github.com/GonkaGate/qwen-code-setup/commit/e084d4e1a2f48f6434e6c5f84311bf2cc74b8794))
+
 ## [0.2.0](https://github.com/GonkaGate/qwen-code-setup/compare/v0.1.0...v0.2.0) (2026-06-16)
 
 ### Features
