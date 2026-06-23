@@ -41,7 +41,7 @@ redacted.
 
 The happy path is:
 
-1. Detects the local `qwen` binary and verifies the audited Qwen Code baseline.
+1. Detects the local `qwen` binary and records its version.
 2. Collects or reuses `GONKAGATE_API_KEY` without printing the secret.
 3. Calls authenticated `GET https://api.gonkagate.com/v1/models`.
 4. Requires all supported GonkaGate models before writing config.
@@ -67,6 +67,9 @@ model catalog:
 
 The compatibility baseline is `@qwen-code/qwen-code` `0.18.0`, audited
 on June 12, 2026.
+
+Newer Qwen Code versions are not blocked solely because they are newer; the
+setup and verification checks surface actual incompatibilities.
 
 The current Qwen Code integration points are:
 

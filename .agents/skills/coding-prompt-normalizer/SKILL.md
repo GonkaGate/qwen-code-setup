@@ -18,14 +18,15 @@ exact literals, and repository truth.
 
 Be honest about this repo:
 
-- it is the scaffold for `npx @gonkagate/qwen-code-setup`
-- the Qwen Code installer runtime is not implemented yet
+- it is the public runtime for `npx @gonkagate/qwen-code-setup`
+- the Qwen Code installer runtime is implemented
 - the main contract surfaces are `AGENTS.md`, `README.md`, `docs/`,
-  `src/cli.ts`, `src/constants/`, and `test/`
+  `src/cli.ts`, `src/install/`, `src/constants/`, and `test/`
 - the product source of truth is
   `docs/specs/qwen-code-setup-prd/spec.md`
-- current audited Qwen Code baseline is `@qwen-code/qwen-code` `0.17.1` as of
-  June 12, 2026, but upstream must be rechecked for config/auth work
+- current audited Qwen Code metadata is `@qwen-code/qwen-code` `0.18.0` as of
+  June 12, 2026, but newer parsed Qwen Code versions must not be blocked solely
+  because they are newer
 
 Do not turn a request into a fake implementation brief for runtime behavior
 that does not exist unless the user explicitly asks to build it.

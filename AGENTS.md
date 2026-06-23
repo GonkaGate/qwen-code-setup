@@ -26,9 +26,11 @@ Current honest state:
   are present
 - the latest audited stable upstream Qwen Code release is
   `@qwen-code/qwen-code` `0.18.0` as of June 12, 2026
+- parsed newer Qwen Code versions are not blocked solely because they are newer;
+  real setup and verification checks should surface actual incompatibilities
 
 If the implementation status, package name, security flow, config locations,
-transport contract, or verified Qwen Code baseline changes, this file must be
+transport contract, or audited Qwen Code assumptions change, this file must be
 updated immediately so it stays truthful.
 
 ## Fixed Product Invariants
@@ -56,6 +58,8 @@ These audited assumptions are the current implementation contract:
 - package: `@qwen-code/qwen-code`
 - binary: `qwen`
 - audited version: `0.18.0`
+- runtime version policy: allow any parsed Qwen Code version; do not gate
+  future versions by exact audited-version equality
 - npm package engine: `>=22.0.0`
 - user settings path: `~/.qwen/settings.json`
 - OpenAI-compatible providers live under `modelProviders.openai[]`

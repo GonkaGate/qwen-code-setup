@@ -10,7 +10,7 @@ import { InstallerError, toInstallerError } from "../../src/install/errors.js";
 test("PRD blocker codes are stable typed values", () => {
   assert.deepEqual(PRD_INSTALL_BLOCKER_CODES, [
     "qwen_not_found",
-    "qwen_version_unsupported",
+    "qwen_version_unparseable",
     "settings_parse_failed",
     "managed_write_failed",
     "model_conflict",

@@ -133,6 +133,10 @@ Audited on June 12, 2026:
 - Qwen Code package engine `>=22.0.0`
 - this installer engine `>=22.14.0`
 
+The audited version is compatibility metadata, not an exact runtime allowlist.
+The installer must not block newer parsed Qwen Code versions solely because
+they are newer.
+
 Primary evidence:
 
 - official Qwen Code auth docs:
@@ -491,7 +495,7 @@ Write requirements:
 `install-state.json` must record:
 
 - installer version
-- audited Qwen Code version
+- audited Qwen Code version used for compatibility metadata
 - selected scope
 - selected curated model key
 - managed model ids written
@@ -574,7 +578,7 @@ Never print:
 Important blocker classes:
 
 - `qwen_not_found`
-- `qwen_version_unsupported`
+- `qwen_version_unparseable`
 - `settings_parse_failed`
 - `managed_write_failed`
 - `model_conflict`
