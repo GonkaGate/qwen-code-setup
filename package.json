@@ -1,6 +1,6 @@
 {
   "name": "@gonkagate/qwen-code-setup",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Developer CLI for configuring Qwen Code to use GonkaGate as an OpenAI-compatible provider.",
   "homepage": "https://github.com/GonkaGate/qwen-code-setup#readme",
   "bugs": {
