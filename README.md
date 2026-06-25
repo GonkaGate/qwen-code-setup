@@ -12,9 +12,9 @@ npx @gonkagate/qwen-code-setup
 ![Qwen%20Code](https://img.shields.io/badge/Qwen%20Code-audited%200.18.0-35D6FF?style=flat-square)
 ![License](https://img.shields.io/badge/license-Apache--2.0-2A2A2A?style=flat-square)
 
-[![Website](https://img.shields.io/badge/Website-gonkagate.com-111827?style=flat-square)](https://gonkagate.com/en)
-[![Docs](https://img.shields.io/badge/Docs-API%20Guides-2563EB?style=flat-square)](https://gonkagate.com/en/docs)
-[![API%20Key](https://img.shields.io/badge/API%20Key-Dashboard-F97316?style=flat-square)](https://gonkagate.com/en/register)
+[![Website](https://img.shields.io/badge/Website-gonkagate.com-111827?style=flat-square)](https://gonkagate.com/en?utm_source=github&utm_medium=referral&utm_campaign=qwen_code_setup&utm_content=readme_badge_website)
+[![Docs](https://img.shields.io/badge/Docs-API%20Guides-2563EB?style=flat-square)](https://gonkagate.com/en/docs?utm_source=github&utm_medium=referral&utm_campaign=qwen_code_setup&utm_content=readme_badge_docs)
+[![API%20Key](https://img.shields.io/badge/API%20Key-Dashboard-F97316?style=flat-square)](https://gonkagate.com/en/register?utm_source=github&utm_medium=referral&utm_campaign=qwen_code_setup&utm_content=readme_badge_api_key)
 
 `@gonkagate/qwen-code-setup` is a public CLI installer for developers who want
 Qwen Code to route chat completions through the GonkaGate API without manually
