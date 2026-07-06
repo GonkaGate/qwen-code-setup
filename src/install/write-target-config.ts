@@ -1,10 +1,7 @@
-import type {
-  CuratedModelRegistryRecord,
-  CuratedModelKey,
-} from "../constants/models.js";
 import type { InstallBlocker } from "./contracts/blockers.js";
 import type { InstallScope } from "./contracts/install-flow.js";
 import type { InstallDependencies } from "./deps.js";
+import type { GonkagateModel } from "./gonkagate-client.js";
 import type { ResolvedQwenPaths } from "./paths.js";
 import { readQwenSettings, serializeQwenSettings } from "./qwen-settings.js";
 import {
@@ -28,10 +25,9 @@ export async function createWriteTargetConfigPlans(input: {
   readonly deps: InstallDependencies;
   readonly paths: ResolvedQwenPaths;
   readonly scope: InstallScope;
-  readonly selectedModelKey: CuratedModelKey;
   readonly selectedModelId: string;
   readonly secretValue: string;
-  readonly models: readonly CuratedModelRegistryRecord[];
+  readonly models: readonly GonkagateModel[];
 }): Promise<WriteTargetConfigResult> {
   const userSettings = await readQwenSettings(
     input.deps.fs,
@@ -88,7 +84,8 @@ export async function createWriteTargetConfigPlans(input: {
     contents: serializeInstallState(
       createInstallState({
         scope: input.scope,
-        selectedModelKey: input.selectedModelKey,
+        selectedModelId: input.selectedModelId,
+        managedModelIds: input.models.map((model) => model.id),
         userSettingsPath: input.paths.userSettingsPath,
         ...(input.scope === "project"
           ? { projectSettingsPath: input.paths.projectSettingsPath }

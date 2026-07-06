@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { HttpRequest } from "../../src/install/deps.js";
 import {
-  extractModelIdsFromModelsResponse,
+  extractModelsFromModelsResponse,
   fetchGonkagateModels,
 } from "../../src/install/gonkagate-client.js";
 import { createFakeInstallDependencies } from "./test-deps.js";
@@ -91,6 +91,18 @@ test("GonkaGate models client rejects invalid, oversized, and malformed response
     }),
     "gp-client-secret",
   );
+  const empty = await fetchGonkagateModels(
+    createFakeInstallDependencies({
+      http: {
+        request: async () => ({
+          status: 200,
+          headers: {},
+          body: JSON.stringify({ data: [] }),
+        }),
+      },
+    }),
+    "gp-client-secret",
+  );
   const oversized = await fetchGonkagateModels(
     createFakeInstallDependencies({
       http: {
@@ -106,14 +118,20 @@ test("GonkaGate models client rejects invalid, oversized, and malformed response
 
   assert.equal(invalidJson.ok, false);
   assert.equal(invalidSchema.ok, false);
+  assert.equal(empty.ok, false);
   assert.equal(oversized.ok, false);
 });
 
 test("models response parser extracts ids and ignores extra object fields", () => {
   assert.deepEqual(
-    extractModelIdsFromModelsResponse(
-      JSON.stringify({ data: [{ id: "model-a", owned_by: "gonkagate" }] }),
+    extractModelsFromModelsResponse(
+      JSON.stringify({
+        data: [
+          { id: "model-a", name: "Model A", owned_by: "gonkagate" },
+          { id: "model-a", name: "Duplicate Model A" },
+        ],
+      }),
     ),
-    ["model-a"],
+    [{ id: "model-a", name: "Model A" }],
   );
 });

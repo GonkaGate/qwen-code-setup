@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getValidatedModels } from "../../src/constants/models.js";
 import { InstallerError } from "../../src/install/errors.js";
 import { parseJsoncObject } from "../../src/install/jsonc.js";
 import {
@@ -9,6 +8,7 @@ import {
 } from "../../src/install/managed-config-mutations.js";
 import { createManagedProviderEntries } from "../../src/install/managed-provider-config.js";
 import { readQwenSettings } from "../../src/install/qwen-settings.js";
+import { LIVE_MODELS, UNKNOWN_LIVE_MODEL } from "./model-fixtures.js";
 import { createMemoryFileSystem } from "./test-deps.js";
 
 test("Qwen settings parser covers missing, JSONC, malformed, and non-object input", async () => {
@@ -47,7 +47,7 @@ test("managed user mutation preserves unrelated settings and writes all managed 
     {
       selectedModelId: "minimaxai/minimax-m2.7",
       secretValue: "gp-user-secret",
-      models: getValidatedModels(),
+      models: [...LIVE_MODELS, UNKNOWN_LIVE_MODEL],
     },
   );
 
@@ -68,8 +68,11 @@ test("managed user mutation preserves unrelated settings and writes all managed 
       "gp-user-secret",
     );
     const providers = getOpenAiProviders(result.settings);
-    assert.equal(providers.length, 4);
-    for (const managed of createManagedProviderEntries()) {
+    assert.equal(providers.length, 5);
+    for (const managed of createManagedProviderEntries([
+      ...LIVE_MODELS,
+      UNKNOWN_LIVE_MODEL,
+    ])) {
       assert.ok(providers.some((provider) => provider.id === managed.id));
     }
   }
@@ -81,7 +84,7 @@ test("managed user mutation replaces prior managed entries without duplicates", 
     {
       selectedModelId: "qwen/qwen3-235b-a22b-instruct-2507-fp8",
       secretValue: "gp-old",
-      models: getValidatedModels(),
+      models: LIVE_MODELS,
     },
   );
 
@@ -91,7 +94,7 @@ test("managed user mutation replaces prior managed entries without duplicates", 
     const rerun = mutateUserSettings(previous.settings, {
       selectedModelId: "moonshotai/Kimi-K2.6",
       secretValue: "gp-new",
-      models: getValidatedModels(),
+      models: LIVE_MODELS,
     });
 
     assert.equal(rerun.ok, true);
@@ -126,7 +129,7 @@ test("same-id unmanaged provider conflict blocks mutation", () => {
     {
       selectedModelId: "minimaxai/minimax-m2.7",
       secretValue: "gp-secret",
-      models: getValidatedModels(),
+      models: LIVE_MODELS,
     },
   );
 

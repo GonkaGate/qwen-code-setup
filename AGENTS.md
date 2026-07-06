@@ -72,12 +72,11 @@ These audited assumptions are the current implementation contract:
 - the v1 durable secret target is user-level
   `settings.env.GONKAGATE_API_KEY`
 - after API-key collection, the installer must make a separate authenticated
-  `GET https://api.gonkagate.com/v1/models` request and confirm all three
-  supported models before rendering the picker or writing config
-- the managed Qwen provider catalog must include all three supported models:
-  - `qwen/qwen3-235b-a22b-instruct-2507-fp8`
-  - `moonshotai/Kimi-K2.6`
-  - `minimaxai/minimax-m2.7`
+  `GET https://api.gonkagate.com/v1/models` request before rendering the
+  picker or writing config
+- authenticated `/v1/models` is the source of truth for user-visible model ids,
+  names, `--model` validation, default selection, and managed provider writes
+- no checked-in GonkaGate model id list may become the runtime source of truth
 - `qwen auth` is removed in the audited baseline; status is an interactive
   `/doctor` concern rather than a standalone `qwen auth status` command
 - `modelProviders` is currently marked with `replace` merge semantics, so

@@ -3,7 +3,13 @@ import { InstallerError } from "./errors.js";
 import type { InstallDependencies } from "./deps.js";
 import { redactSecrets, redactUnknown } from "./redact.js";
 
+export interface GonkagateModel {
+  readonly id: string;
+  readonly name?: string;
+}
+
 export interface GonkagateModelList {
+  readonly models: readonly GonkagateModel[];
   readonly modelIds: readonly string[];
 }
 
@@ -52,10 +58,13 @@ export async function fetchGonkagateModels(
       };
     }
 
+    const models = extractModelsFromModelsResponse(response.body);
+
     return {
       ok: true,
       models: {
-        modelIds: extractModelIdsFromModelsResponse(response.body),
+        models,
+        modelIds: models.map((model) => model.id),
       },
     };
   } catch (error) {
@@ -72,7 +81,9 @@ export async function fetchGonkagateModels(
   }
 }
 
-export function extractModelIdsFromModelsResponse(body: string): string[] {
+export function extractModelsFromModelsResponse(
+  body: string,
+): GonkagateModel[] {
   let parsed: unknown;
 
   try {
@@ -93,10 +104,11 @@ export function extractModelIdsFromModelsResponse(body: string): string[] {
     );
   }
 
-  const modelIds: string[] = [];
+  const modelsById = new Map<string, GonkagateModel>();
 
   for (const entry of data) {
-    const id = toRecord(entry).id;
+    const record = toRecord(entry);
+    const id = record.id;
 
     if (typeof id !== "string" || id.trim() === "") {
       throw modelAvailabilityError(
@@ -104,10 +116,29 @@ export function extractModelIdsFromModelsResponse(body: string): string[] {
       );
     }
 
-    modelIds.push(id);
+    const modelId = id.trim();
+    if (!modelsById.has(modelId)) {
+      const name = record.name;
+      modelsById.set(modelId, {
+        id: modelId,
+        ...(typeof name === "string" && name.trim() !== ""
+          ? { name: name.trim() }
+          : {}),
+      });
+    }
   }
 
-  return modelIds;
+  if (modelsById.size === 0) {
+    throw modelAvailabilityError(
+      "GonkaGate /v1/models response did not return any models.",
+    );
+  }
+
+  return [...modelsById.values()];
+}
+
+export function extractModelIdsFromModelsResponse(body: string): string[] {
+  return extractModelsFromModelsResponse(body).map((model) => model.id);
 }
 
 function modelAvailabilityError(message: string): InstallerError {

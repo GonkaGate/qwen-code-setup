@@ -1,5 +1,4 @@
 import { QWEN_CODE_SETUP_CONTRACT } from "../constants/contract.js";
-import { getRequiredGonkagateModelIds } from "../constants/models.js";
 import type { InstallBlocker } from "./contracts/blockers.js";
 import { createBlocker } from "./contracts/blockers.js";
 
@@ -94,11 +93,10 @@ export function projectModelProvidersCanHideManagedCatalog(
     projectSettings,
     trustedProject,
   );
+  const userManagedIds = getOpenAiProviderIds(userSettings);
   const effectiveIds = getOpenAiProviderIds(effective);
 
-  return getRequiredGonkagateModelIds().some(
-    (id) => !effectiveIds.includes(id),
-  );
+  return userManagedIds.some((id) => !effectiveIds.includes(id));
 }
 
 export function createProjectModelProvidersOverrideBlocker(): InstallBlocker {

@@ -1,7 +1,7 @@
 import { QWEN_CODE_SETUP_CONTRACT } from "../constants/contract.js";
-import type { CuratedModelRegistryRecord } from "../constants/models.js";
 import type { InstallBlocker } from "./contracts/blockers.js";
 import { createBlocker } from "./contracts/blockers.js";
+import type { GonkagateModel } from "./gonkagate-client.js";
 import {
   createManagedProviderEntries,
   hasProviderConflict,
@@ -28,7 +28,7 @@ export function mutateUserSettings(
   options: {
     readonly selectedModelId: string;
     readonly secretValue: string;
-    readonly models: readonly CuratedModelRegistryRecord[];
+    readonly models: readonly GonkagateModel[];
   },
 ): ManagedConfigMutationResult {
   const root = toRecord(settings);

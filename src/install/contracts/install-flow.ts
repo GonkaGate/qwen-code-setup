@@ -1,11 +1,10 @@
-import type { CuratedModelKey } from "../../constants/models.js";
 import type { InstallBlocker } from "./blockers.js";
 
 export type InstallScope = "user" | "project";
 
 export interface InstallFlowRequest {
   readonly scope?: InstallScope;
-  readonly modelKey?: CuratedModelKey;
+  readonly modelKey?: string;
   readonly yes: boolean;
   readonly json: boolean;
   readonly apiKeyStdin: boolean;
@@ -39,7 +38,7 @@ export interface BaseInstallFlowResult {
     | "verification-warning";
   readonly runtimeImplemented: boolean;
   readonly scope?: InstallScope;
-  readonly selectedModel?: CuratedModelKey;
+  readonly selectedModel?: string;
   readonly managedPaths: readonly ManagedPathSummary[];
   readonly changed: boolean;
   readonly blockers: readonly InstallBlocker[];

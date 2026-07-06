@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getValidatedModels } from "../../src/constants/models.js";
 import { createDryRunPlanSummary } from "../../src/install/dry-run.js";
 import { createWriteTargetConfigPlans } from "../../src/install/write-target-config.js";
+import type { ResolvedQwenPaths } from "../../src/install/paths.js";
+import { LIVE_MODELS } from "./model-fixtures.js";
 import {
   createFakeInstallDependencies,
   createMemoryFileSystem,
 } from "./test-deps.js";
-import type { ResolvedQwenPaths } from "../../src/install/paths.js";
 
 function paths(): ResolvedQwenPaths {
   return {
@@ -42,10 +42,9 @@ test("dry-run summarizes planned writes without touching filesystem or leaking s
     }),
     paths: paths(),
     scope: "project",
-    selectedModelKey: "kimi-k2.6",
     selectedModelId: "moonshotai/Kimi-K2.6",
     secretValue: "gp-dry-run-secret",
-    models: getValidatedModels(),
+    models: LIVE_MODELS,
   });
 
   assert.equal(result.ok, true);

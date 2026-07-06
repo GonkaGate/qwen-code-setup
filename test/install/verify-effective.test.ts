@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getValidatedModels } from "../../src/constants/models.js";
 import type { FileSystemDeps } from "../../src/install/deps.js";
 import type { ResolvedQwenPaths } from "../../src/install/paths.js";
 import { verifyDurableInstall } from "../../src/install/verify-effective.js";
@@ -9,6 +8,9 @@ import {
   createFakeInstallDependencies,
   createMemoryFileSystem,
 } from "./test-deps.js";
+import { LIVE_MODELS } from "./model-fixtures.js";
+
+const LIVE_MODEL_IDS = LIVE_MODELS.map((model) => model.id);
 
 function paths(): ResolvedQwenPaths {
   return {
@@ -35,16 +37,16 @@ test("durable verifier proves user-scope managed settings", async () => {
     deps,
     paths: paths(),
     scope: "user",
-    selectedModelKey: "kimi-k2.6",
     selectedModelId: "moonshotai/Kimi-K2.6",
     secretValue: "gp-verify-secret",
-    models: getValidatedModels(),
+    models: LIVE_MODELS,
   });
   const verification = await verifyDurableInstall({
     deps,
     paths: paths(),
     scope: "user",
     selectedModelId: "moonshotai/Kimi-K2.6",
+    managedModelIds: LIVE_MODEL_IDS,
   });
 
   assert.equal(write.ok, true);
@@ -66,6 +68,7 @@ test("durable verifier blocks missing provider, secret, auth, and model evidence
     paths: paths(),
     scope: "user",
     selectedModelId: "moonshotai/Kimi-K2.6",
+    managedModelIds: LIVE_MODEL_IDS,
   });
 
   assert.equal(verification.ok, false);
@@ -86,10 +89,9 @@ test("durable verifier blocks project and system overrides", async () => {
     deps,
     paths: paths(),
     scope: "project",
-    selectedModelKey: "qwen3-235b-a22b-instruct-2507-fp8",
     selectedModelId: "qwen/qwen3-235b-a22b-instruct-2507-fp8",
     secretValue: "gp-verify-secret",
-    models: getValidatedModels(),
+    models: LIVE_MODELS,
   });
   fs.files.set(
     paths().projectSettingsPath,
@@ -109,6 +111,7 @@ test("durable verifier blocks project and system overrides", async () => {
     paths: paths(),
     scope: "project",
     selectedModelId: "qwen/qwen3-235b-a22b-instruct-2507-fp8",
+    managedModelIds: LIVE_MODEL_IDS,
   });
 
   assert.equal(verification.ok, false);
@@ -130,11 +133,7 @@ test("durable verifier fails closed on unreadable system settings and permission
   const memory = createMemoryFileSystem({
     [paths().userSettingsPath]: JSON.stringify({
       modelProviders: {
-        openai: [
-          "qwen/qwen3-235b-a22b-instruct-2507-fp8",
-          "moonshotai/Kimi-K2.6",
-          "minimaxai/minimax-m2.7",
-        ].map((id) => ({ id })),
+        openai: LIVE_MODEL_IDS.map((id) => ({ id })),
       },
       security: { auth: { selectedType: "openai" } },
       model: { name: "moonshotai/Kimi-K2.6" },
@@ -161,6 +160,7 @@ test("durable verifier fails closed on unreadable system settings and permission
     paths: paths(),
     scope: "user",
     selectedModelId: "moonshotai/Kimi-K2.6",
+    managedModelIds: LIVE_MODEL_IDS,
   });
 
   assert.equal(verification.ok, false);

@@ -1,5 +1,4 @@
 import { QWEN_CODE_SETUP_CONTRACT } from "../constants/contract.js";
-import { getValidatedModels } from "../constants/models.js";
 import type { InstallFlowResult } from "../install/contracts/install-flow.js";
 import { redactSecrets, redactedJsonStringify } from "../install/redact.js";
 import type {
@@ -144,6 +143,5 @@ function toJsonPayload(result: InstallFlowResult): Record<string, unknown> {
     changed: result.changed,
     blockers: result.blockers,
     warnings: result.warnings,
-    supportedModels: getValidatedModels().map((model) => model.key),
   };
 }

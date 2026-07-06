@@ -1,8 +1,5 @@
 import { QWEN_CODE_SETUP_CONTRACT } from "../constants/contract.js";
-import {
-  getValidatedModels,
-  type CuratedModelRegistryRecord,
-} from "../constants/models.js";
+import type { GonkagateModel } from "./gonkagate-client.js";
 
 export const MANAGED_PROVIDER_DESCRIPTION =
   "Managed by @gonkagate/qwen-code-setup";
@@ -17,17 +14,14 @@ export interface ManagedOpenAiProviderEntry {
 }
 
 export function createManagedProviderEntries(
-  models: readonly CuratedModelRegistryRecord[] = getValidatedModels(),
+  models: readonly GonkagateModel[],
 ): ManagedOpenAiProviderEntry[] {
   return models.map((model) => ({
     id: model.id,
-    name: `${model.label} via GonkaGate`,
+    name: `${model.name ?? model.id} via GonkaGate`,
     baseUrl: QWEN_CODE_SETUP_CONTRACT.canonicalBaseUrl,
     description: MANAGED_PROVIDER_DESCRIPTION,
     envKey: QWEN_CODE_SETUP_CONTRACT.qwenEnvKey,
-    ...(model.generationConfig === undefined
-      ? {}
-      : { generationConfig: model.generationConfig }),
   }));
 }
 

@@ -2,11 +2,10 @@
 
 ## [0.2.1](https://github.com/GonkaGate/qwen-code-setup/compare/v0.2.0...v0.2.1) (2026-06-23)
 
-
 ### Bug Fixes
 
-* allow future Qwen Code versions ([676d44d](https://github.com/GonkaGate/qwen-code-setup/commit/676d44d7a0181f82c22b3c584652cd642879eca0))
-* allow future Qwen Code versions ([e084d4e](https://github.com/GonkaGate/qwen-code-setup/commit/e084d4e1a2f48f6434e6c5f84311bf2cc74b8794))
+- allow future Qwen Code versions ([676d44d](https://github.com/GonkaGate/qwen-code-setup/commit/676d44d7a0181f82c22b3c584652cd642879eca0))
+- allow future Qwen Code versions ([e084d4e](https://github.com/GonkaGate/qwen-code-setup/commit/e084d4e1a2f48f6434e6c5f84311bf2cc74b8794))
 
 ## [0.2.0](https://github.com/GonkaGate/qwen-code-setup/compare/v0.1.0...v0.2.0) (2026-06-16)
 
@@ -22,5 +21,5 @@
 - Add TypeScript, CI, release, package, docs, contract-test, and mirrored skill infrastructure.
 - Record the initial Qwen Code compatibility assumptions without claiming the installer runtime is implemented.
 - Expand the Qwen Code setup PRD with concrete v1 requirements for Qwen settings, secret storage, scope behavior, verification, and diagnostics.
-- Require support for all three current GonkaGate models and authenticated `/v1/models` discovery after API-key intake.
+- Require authenticated `/v1/models` discovery after API-key intake.
 - Implement the Qwen Code setup runtime with safe secret intake, authenticated model discovery, managed user/project settings writes, backups, rollback, dry-run, durable verification, current-session shadowing warnings, redacted human/JSON output, and fake-tested optional live verification.

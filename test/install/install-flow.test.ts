@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getRequiredGonkagateModelIds } from "../../src/constants/models.js";
 import type { FileSystemDeps, HttpRequest } from "../../src/install/deps.js";
 import { runInstallFlow } from "../../src/install/index.js";
+import {
+  LIVE_MODELS_WITH_UNKNOWN,
+  UNKNOWN_LIVE_MODEL,
+  modelsResponse,
+} from "./model-fixtures.js";
 import {
   createFakeInstallDependencies,
   createMemoryFileSystem,
@@ -41,9 +45,7 @@ function depsForFlow(
       request: async () => ({
         status: 200,
         headers: {},
-        body: JSON.stringify({
-          data: getRequiredGonkagateModelIds().map((id) => ({ id })),
-        }),
+        body: modelsResponse(LIVE_MODELS_WITH_UNKNOWN),
       }),
     },
     ...overrides,
@@ -53,29 +55,29 @@ function depsForFlow(
 test("install flow writes user settings and returns success", async () => {
   const fs = createMemoryFileSystem();
   const result = await runInstallFlow(
-    request({ modelKey: "kimi-k2.6" }),
+    request({ modelKey: UNKNOWN_LIVE_MODEL.id }),
     depsForFlow({ fs }),
   );
 
   assert.equal(result.ok, true);
   assert.equal(result.status, "success");
-  assert.equal(result.selectedModel, "kimi-k2.6");
+  assert.equal(result.selectedModel, UNKNOWN_LIVE_MODEL.id);
   assert.equal(result.changed, true);
   assert.match(
     fs.files.get("/tmp/qwen-home/.qwen/settings.json") ?? "",
-    /moonshotai\/Kimi-K2\.6/,
+    /future\/network-model/,
   );
   assert.match(
     fs.files.get("/tmp/qwen-home/.gonkagate/qwen-code/install-state.json") ??
       "",
-    /kimi-k2\.6/,
+    /future\/network-model/,
   );
 });
 
 test("install flow writes project activation only and no project secret", async () => {
   const fs = createMemoryFileSystem();
   const result = await runInstallFlow(
-    request({ scope: "project", modelKey: "minimax-m2.7" }),
+    request({ scope: "project", modelKey: "minimaxai/minimax-m2.7" }),
     depsForFlow({ fs }),
   );
 
@@ -147,7 +149,7 @@ test("install flow dry-run reports current-session shadowing without writing", a
   );
 });
 
-test("install flow missing required models blocks before writes and picker", async () => {
+test("install flow empty live model catalog fails before writes and picker", async () => {
   let writes = 0;
   let pickerCalls = 0;
   const memory = createMemoryFileSystem();
@@ -173,17 +175,17 @@ test("install flow missing required models blocks before writes and picker", asy
         request: async () => ({
           status: 200,
           headers: {},
-          body: JSON.stringify({
-            data: [{ id: "qwen/qwen3-235b-a22b-instruct-2507-fp8" }],
-          }),
+          body: JSON.stringify({ data: [] }),
         }),
       },
     }),
   );
 
   assert.equal(result.ok, false);
-  assert.equal(result.status, "blocked");
-  assert.equal(result.blockers[0]?.code, "required_models_unavailable");
+  assert.equal(result.status, "failed");
+  if (!result.ok && result.status === "failed") {
+    assert.equal(result.errorCode, "validated_models_unavailable");
+  }
   assert.equal(writes, 0);
   assert.equal(pickerCalls, 0);
 });
@@ -209,9 +211,7 @@ test("install flow can reuse existing managed key on --yes rerun", async () => {
           return {
             status: 200,
             headers: {},
-            body: JSON.stringify({
-              data: getRequiredGonkagateModelIds().map((id) => ({ id })),
-            }),
+            body: modelsResponse(),
           };
         },
       },

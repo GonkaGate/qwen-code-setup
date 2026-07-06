@@ -1,15 +1,14 @@
 import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import test from "node:test";
 import { QWEN_CODE_SETUP_CONTRACT } from "../src/constants/contract.js";
 import {
-  CURATED_MODEL_REGISTRY,
-  UnsupportedCuratedModelError,
-  getCuratedModelByKey,
-  getRecommendedDefaultModel,
-  getRequiredGonkagateModelIds,
-  getValidatedModels,
-} from "../src/constants/models.js";
-import { assertMatchesAll, readText } from "./contract-helpers.js";
+  assertMatchesAll,
+  listRelativeFiles,
+  readText,
+  repoRoot,
+} from "./contract-helpers.js";
 
 test("package metadata follows the public qwen-code-setup contract", () => {
   const packageJson = JSON.parse(readText("package.json")) as {
@@ -63,8 +62,10 @@ test("contract constants record shipped runtime state and Qwen Code baseline", (
   assert.equal(QWEN_CODE_SETUP_CONTRACT.qwenBinaryName, "qwen");
   assert.equal(QWEN_CODE_SETUP_CONTRACT.packageVersion, packageJson.version);
   assert.equal(QWEN_CODE_SETUP_CONTRACT.runtimeImplemented, true);
-  assert.equal(QWEN_CODE_SETUP_CONTRACT.curatedRegistryPublished, true);
-  assert.equal(QWEN_CODE_SETUP_CONTRACT.requiredGonkagateModelCount, 3);
+  assert.equal(
+    QWEN_CODE_SETUP_CONTRACT.modelCatalogSource,
+    "authenticated /v1/models",
+  );
   assert.equal(QWEN_CODE_SETUP_CONTRACT.latestAuditedQwenCodeVersion, "0.18.0");
   assert.equal(QWEN_CODE_SETUP_CONTRACT.qwenPackageNodeEngine, ">=22.0.0");
   assert.equal(
@@ -85,49 +86,20 @@ test("contract constants record shipped runtime state and Qwen Code baseline", (
   ]);
 });
 
-test("supported model registry publishes all three required GonkaGate models", () => {
-  assert.equal(CURATED_MODEL_REGISTRY.length, 3);
-  assert.ok(
-    CURATED_MODEL_REGISTRY.every((model) => model.status === "validated"),
-  );
-  assert.deepEqual(
-    CURATED_MODEL_REGISTRY.map((model) => model.id),
-    [
-      "qwen/qwen3-235b-a22b-instruct-2507-fp8",
-      "moonshotai/Kimi-K2.6",
-      "minimaxai/minimax-m2.7",
-    ],
-  );
-  assert.deepEqual(
-    getValidatedModels().map((model) => model.id),
-    getRequiredGonkagateModelIds(),
-  );
-  assert.ok(
-    CURATED_MODEL_REGISTRY.every(
-      (model) =>
-        model.validationEvidenceDate === "2026-06-12" &&
-        model.qwenCompatibilityNotes.length > 0,
-    ),
-  );
-  assert.equal(getRecommendedDefaultModel().id, CURATED_MODEL_REGISTRY[0].id);
-  assert.equal(
-    CURATED_MODEL_REGISTRY.filter((model) => model.recommendedDefault).length,
-    1,
-  );
-});
+test("runtime source cannot depend on a checked-in model registry", () => {
+  const sourceRoot = resolve(repoRoot, "src");
+  const runtimeSource = listRelativeFiles(sourceRoot)
+    .map((path) => readFileSync(resolve(sourceRoot, path), "utf8"))
+    .join("\n");
 
-test("curated model lookup rejects unsupported model keys", () => {
-  assert.equal(
-    getCuratedModelByKey("qwen3-235b-a22b-instruct-2507-fp8").id,
-    "qwen/qwen3-235b-a22b-instruct-2507-fp8",
+  assert.equal(existsSync(resolve(sourceRoot, "constants/models.ts")), false);
+  assert.doesNotMatch(
+    runtimeSource,
+    /CURATED_MODEL_REGISTRY|getRequiredGonkagateModelIds|getValidatedModels|requiredGonkagateModelCount/,
   );
-
-  assert.throws(
-    () => getCuratedModelByKey("custom/raw-model"),
-    (error) =>
-      error instanceof UnsupportedCuratedModelError &&
-      error.code === "unsupported_curated_model" &&
-      error.modelKey === "custom/raw-model",
+  assert.match(
+    runtimeSource,
+    /modelCatalogSource: "authenticated \/v1\/models"/,
   );
 });
 

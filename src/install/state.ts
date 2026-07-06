@@ -1,8 +1,4 @@
 import { QWEN_CODE_SETUP_CONTRACT } from "../constants/contract.js";
-import {
-  getRequiredGonkagateModelIds,
-  type CuratedModelKey,
-} from "../constants/models.js";
 import type { InstallScope } from "./contracts/install-flow.js";
 import { stringifyJsonObject } from "./jsonc.js";
 
@@ -12,7 +8,7 @@ export interface InstallState {
   readonly installerVersion: string;
   readonly auditedQwenVersion: string;
   readonly scope: InstallScope;
-  readonly selectedModelKey: CuratedModelKey;
+  readonly selectedModelId: string;
   readonly managedModelIds: readonly string[];
   readonly userSettingsPath: string;
   readonly projectSettingsPath?: string;
@@ -22,7 +18,8 @@ export interface InstallState {
 
 export function createInstallState(input: {
   readonly scope: InstallScope;
-  readonly selectedModelKey: CuratedModelKey;
+  readonly selectedModelId: string;
+  readonly managedModelIds: readonly string[];
   readonly userSettingsPath: string;
   readonly projectSettingsPath?: string;
   readonly verifiedAt: string;
@@ -31,8 +28,8 @@ export function createInstallState(input: {
     installerVersion: QWEN_CODE_SETUP_CONTRACT.packageVersion,
     auditedQwenVersion: QWEN_CODE_SETUP_CONTRACT.latestAuditedQwenCodeVersion,
     scope: input.scope,
-    selectedModelKey: input.selectedModelKey,
-    managedModelIds: getRequiredGonkagateModelIds(),
+    selectedModelId: input.selectedModelId,
+    managedModelIds: input.managedModelIds,
     userSettingsPath: input.userSettingsPath,
     ...(input.projectSettingsPath === undefined
       ? {}

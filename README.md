@@ -44,7 +44,7 @@ The happy path is:
 1. Detects the local `qwen` binary and records its version.
 2. Collects or reuses `GONKAGATE_API_KEY` without printing the secret.
 3. Calls authenticated `GET https://api.gonkagate.com/v1/models`.
-4. Requires all supported GonkaGate models before writing config.
+4. Uses that live model response for defaulting, selection, and validation.
 5. Writes the GonkaGate provider into `modelProviders.openai[]`.
 6. Sets `security.auth.selectedType = "openai"` and `model.name`.
 7. Stores the durable key reference at `settings.env.GONKAGATE_API_KEY`.
@@ -56,12 +56,11 @@ settings. Use `--json` for machine-readable, redacted output.
 
 ## Supported Models
 
-The installer only offers models that are present in GonkaGate's authenticated
-model catalog:
-
-- `qwen/qwen3-235b-a22b-instruct-2507-fp8`
-- `moonshotai/Kimi-K2.6`
-- `minimaxai/minimax-m2.7`
+The installer has no checked-in user-facing model catalog. After collecting the
+GonkaGate API key, it calls authenticated
+`GET https://api.gonkagate.com/v1/models` and uses the returned model ids and
+names as the source of truth for the picker, `--model` validation, default
+selection, and Qwen Code provider writes.
 
 ## Known Qwen Code Baseline
 

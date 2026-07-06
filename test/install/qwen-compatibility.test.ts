@@ -1,17 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getRequiredGonkagateModelIds } from "../../src/constants/models.js";
 import {
   evaluateQwenCompatibilityLayers,
   getQwenCompatibilityEvidence,
   mergeSettingsForCompatibilityProof,
   projectModelProvidersCanHideManagedCatalog,
 } from "../../src/install/qwen-compatibility.js";
+import { LIVE_MODELS } from "./model-fixtures.js";
+
+const LIVE_MODEL_IDS = LIVE_MODELS.map((model) => model.id);
 
 function userSettingsWithManagedModels(): Record<string, unknown> {
   return {
     modelProviders: {
-      openai: getRequiredGonkagateModelIds().map((id) => ({
+      openai: LIVE_MODEL_IDS.map((id) => ({
         id,
         baseUrl: "https://api.gonkagate.com/v1",
         envKey: "GONKAGATE_API_KEY",
