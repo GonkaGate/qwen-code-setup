@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/GonkaGate/qwen-code-setup/compare/v0.2.1...v0.3.0) (2026-07-06)
+
+
+### Features
+
+* fetch GonkaGate models dynamically ([745bcdf](https://github.com/GonkaGate/qwen-code-setup/commit/745bcdfb9767c6d4d93a7b03116650279d92740f))
+
 ## [0.2.1](https://github.com/GonkaGate/qwen-code-setup/compare/v0.2.0...v0.2.1) (2026-06-23)
 
 ### Bug Fixes
