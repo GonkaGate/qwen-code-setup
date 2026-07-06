@@ -1,40 +1,51 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { redactedJsonStringify } from "../../src/install/redact.js";
-import { enforceRequiredModelAvailability } from "../../src/install/model-discovery.js";
 import { selectSetupModel } from "../../src/install/selection.js";
-import { getRequiredGonkagateModelIds } from "../../src/constants/models.js";
+import {
+  LIVE_MODELS_WITH_UNKNOWN,
+  UNKNOWN_LIVE_MODEL,
+} from "./model-fixtures.js";
 import { createFakeInstallDependencies } from "./test-deps.js";
 
-test("--yes selects the recommended validated default after availability", async () => {
+const LIVE_MODEL_CATALOG = {
+  models: LIVE_MODELS_WITH_UNKNOWN,
+  modelIds: LIVE_MODELS_WITH_UNKNOWN.map((model) => model.id),
+};
+
+test("--yes selects the first live model after availability", async () => {
   const result = await selectSetupModel(
     { yes: true },
     createFakeInstallDependencies(),
-    enforceRequiredModelAvailability(getRequiredGonkagateModelIds()),
+    LIVE_MODEL_CATALOG,
   );
 
   assert.equal(result.ok, true);
   if (result.ok) {
-    assert.equal(result.selectedModelKey, "qwen3-235b-a22b-instruct-2507-fp8");
+    assert.equal(
+      result.selectedModelId,
+      "qwen/qwen3-235b-a22b-instruct-2507-fp8",
+    );
     assert.equal(result.pickerRendered, false);
   }
 });
 
-test("explicit curated model key selects that model after availability", async () => {
+test("explicit live model id selects that model after availability", async () => {
   const result = await selectSetupModel(
-    { yes: false, modelKey: "minimax-m2.7" },
+    { yes: false, modelKey: UNKNOWN_LIVE_MODEL.id },
     createFakeInstallDependencies(),
-    enforceRequiredModelAvailability(getRequiredGonkagateModelIds()),
+    LIVE_MODEL_CATALOG,
   );
 
   assert.equal(result.ok, true);
   if (result.ok) {
-    assert.equal(result.selectedModelKey, "minimax-m2.7");
+    assert.equal(result.selectedModelId, UNKNOWN_LIVE_MODEL.id);
   }
 });
 
-test("interactive picker runs only after authenticated availability succeeds", async () => {
+test("interactive picker shows live names and ids", async () => {
   let pickerCalls = 0;
+  let renderedChoices: readonly string[] = [];
   const available = await selectSetupModel(
     { yes: false },
     createFakeInstallDependencies({
@@ -42,51 +53,35 @@ test("interactive picker runs only after authenticated availability succeeds", a
         secret: async () => "gp-secret",
         select: async (_message, choices) => {
           pickerCalls += 1;
-          return choices[1];
+          renderedChoices = choices;
+          return choices[choices.length - 1];
         },
       },
     }),
-    enforceRequiredModelAvailability(getRequiredGonkagateModelIds()),
-  );
-  const unavailable = await selectSetupModel(
-    { yes: false },
-    createFakeInstallDependencies({
-      prompts: {
-        secret: async () => "gp-secret",
-        select: async (_message, choices) => {
-          pickerCalls += 1;
-          return choices[0];
-        },
-      },
-    }),
-    enforceRequiredModelAvailability([
-      "qwen/qwen3-235b-a22b-instruct-2507-fp8",
-    ]),
+    LIVE_MODEL_CATALOG,
   );
 
   assert.equal(available.ok, true);
-  assert.equal(unavailable.ok, false);
   assert.equal(pickerCalls, 1);
-  if (available.ok && !unavailable.ok) {
+  assert.ok(
+    renderedChoices.includes("Future Network Model (future/network-model)"),
+  );
+  if (available.ok) {
     assert.equal(available.pickerRendered, true);
-    assert.equal(unavailable.pickerRendered, false);
-    assert.equal(unavailable.blocker.code, "required_models_unavailable");
+    assert.equal(available.selectedModelId, UNKNOWN_LIVE_MODEL.id);
   }
 });
 
-test("selection rejects invalid curated keys and redacts JSON summaries", async () => {
+test("selection rejects unavailable live ids and redacts JSON summaries", async () => {
   const invalid = await selectSetupModel(
     { yes: false, modelKey: "raw/model-id" },
     createFakeInstallDependencies(),
-    enforceRequiredModelAvailability(getRequiredGonkagateModelIds()),
+    LIVE_MODEL_CATALOG,
   );
   const selected = await selectSetupModel(
-    { yes: true },
+    { yes: false, modelKey: UNKNOWN_LIVE_MODEL.id },
     createFakeInstallDependencies(),
-    enforceRequiredModelAvailability([
-      ...getRequiredGonkagateModelIds(),
-      "future/model",
-    ]),
+    LIVE_MODEL_CATALOG,
   );
 
   assert.equal(invalid.ok, false);
@@ -95,6 +90,9 @@ test("selection rejects invalid curated keys and redacts JSON summaries", async 
   if (!invalid.ok && selected.ok) {
     assert.equal(invalid.blocker.code, "validated_models_unavailable");
     assert.doesNotMatch(redactedJsonStringify(selected.summary), /gp-/);
-    assert.deepEqual(selected.summary.ignoredModelIds, ["future/model"]);
+    assert.deepEqual(
+      selected.summary.availableModels,
+      LIVE_MODEL_CATALOG.modelIds,
+    );
   }
 });

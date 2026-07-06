@@ -31,10 +31,11 @@ The runtime:
 3. Parse and record the local Qwen Code version.
 4. Collect the GonkaGate API key through a safe input.
 5. Fetch `https://api.gonkagate.com/v1/models` with that key.
-6. Confirm all three supported GonkaGate models are available.
-7. Choose the setup default from the supported model picker.
-8. Merges managed GonkaGate settings into Qwen Code user settings, including all
-   three models in `modelProviders.openai[]`.
+6. Parse and dedupe the live GonkaGate model catalog.
+7. Choose the setup default from the first fetched model or the live model
+   picker.
+8. Merges managed GonkaGate settings into Qwen Code user settings, including
+   the fetched models in `modelProviders.openai[]`.
 9. Persist the secret in user-level `settings.env.GONKAGATE_API_KEY`.
 10. Verifies the durable Qwen Code outcome from locally inspectable evidence.
 11. Reports current-session shadowing when process or project env overrides the

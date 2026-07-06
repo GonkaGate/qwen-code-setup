@@ -32,7 +32,7 @@ The initial expected fields are:
 Activation is expected through:
 
 - `security.auth.selectedType = "openai"`
-- `model.name = <curated GonkaGate model id>`
+- `model.name = <live GonkaGate model id>`
 
 This decision was revalidated against `@qwen-code/qwen-code` `0.18.0` on
 June 12, 2026. The provider surface remains valid, but `modelProviders` is
@@ -40,29 +40,19 @@ marked with `replace` merge semantics, so project-scope writes must stay gated
 until later executable compatibility proof confirms they cannot hide
 user-managed providers.
 
-## Decision 3: Combine Curated Support With Authenticated Model Discovery
+## Decision 3: Use Authenticated Model Discovery As Runtime Catalog
 
-The setup flow should expose the three supported GonkaGate models, not an
-arbitrary model id box, and it must confirm availability through GonkaGate after
-API-key intake.
+The setup flow exposes the live GonkaGate model catalog returned for the user's
+API key, not a checked-in model id list.
 
 Reasons:
 
-- predictable public UX
-- support and troubleshooting clarity
-- compatibility metadata can be attached to each model
-- validation proof can gate end-user exposure
-- the authenticated `/v1/models` response proves the supplied API key can
-  actually use the required models
-
-The v1 required model set is:
-
-- `qwen/qwen3-235b-a22b-instruct-2507-fp8`
-- `moonshotai/Kimi-K2.6`
-- `minimaxai/minimax-m2.7`
-
-All three must be written into `modelProviders.openai[]`; `model.name` only
-selects the default.
+- adding or removing a GonkaGate network model should not require a repository
+  change
+- authenticated `/v1/models` response proves the supplied API key can see the
+  model before writes
+- the same live ids drive picker, `--model` validation, default selection, and
+  `modelProviders.openai[]`
 
 ## Decision 4: Use User Settings `env` For The Durable Secret
 

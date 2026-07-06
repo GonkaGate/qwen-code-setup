@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getValidatedModels } from "../../src/constants/models.js";
 import { writeManagedQwenSettings } from "../../src/install/write.js";
 import type { ResolvedQwenPaths } from "../../src/install/paths.js";
+import { LIVE_MODELS } from "./model-fixtures.js";
 import {
   createFakeInstallDependencies,
   createMemoryFileSystem,
@@ -34,12 +34,11 @@ test("rerun updates managed model without duplicating catalog or deleting unrela
     paths: paths(),
     scope: "user" as const,
     secretValue: "gp-rerun-secret",
-    models: getValidatedModels(),
+    models: LIVE_MODELS,
   };
 
   const first = await writeManagedQwenSettings({
     ...base,
-    selectedModelKey: "qwen3-235b-a22b-instruct-2507-fp8",
     selectedModelId: "qwen/qwen3-235b-a22b-instruct-2507-fp8",
   });
   const firstSettings = JSON.parse(
@@ -62,7 +61,6 @@ test("rerun updates managed model without duplicating catalog or deleting unrela
 
   const second = await writeManagedQwenSettings({
     ...base,
-    selectedModelKey: "kimi-k2.6",
     selectedModelId: "moonshotai/Kimi-K2.6",
   });
 

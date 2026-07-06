@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { runCli } from "../src/cli.js";
 import { QWEN_CODE_SETUP_CONTRACT } from "../src/constants/contract.js";
-import { getRequiredGonkagateModelIds } from "../src/constants/models.js";
+import { LIVE_MODELS, modelsResponse } from "./install/model-fixtures.js";
 import { createFakeInstallDependencies } from "./install/test-deps.js";
 
 function createOutput() {
@@ -42,9 +42,7 @@ function cliDeps(
       request: async () => ({
         status: 200,
         headers: {},
-        body: JSON.stringify({
-          data: getRequiredGonkagateModelIds().map((id) => ({ id })),
-        }),
+        body: modelsResponse(),
       }),
     },
     ...overrides,
@@ -90,18 +88,14 @@ test("CLI renders machine-readable install state", async () => {
   const payload = JSON.parse(stdout.text()) as {
     packageName?: string;
     runtimeImplemented?: boolean;
-    supportedModels?: string[];
     status?: string;
+    selectedModel?: string;
   };
 
   assert.equal(payload.packageName, "@gonkagate/qwen-code-setup");
   assert.equal(payload.runtimeImplemented, true);
   assert.equal(payload.status, "success");
-  assert.deepEqual(payload.supportedModels, [
-    "qwen3-235b-a22b-instruct-2507-fp8",
-    "kimi-k2.6",
-    "minimax-m2.7",
-  ]);
+  assert.equal(payload.selectedModel, LIVE_MODELS[0].id);
   assert.doesNotMatch(stdout.text(), /gp-cli-secret/);
 });
 
@@ -117,7 +111,7 @@ test("CLI supports JSON dry-run with project scope and stdin secret", async () =
       "--scope",
       "project",
       "--model",
-      "minimax-m2.7",
+      "minimaxai/minimax-m2.7",
       "--yes",
       "--dry-run",
       "--verify-live",
@@ -147,7 +141,7 @@ test("CLI supports JSON dry-run with project scope and stdin secret", async () =
 
   assert.equal(payload.status, "dry-run");
   assert.equal(payload.scope, "project");
-  assert.equal(payload.selectedModel, "minimax-m2.7");
+  assert.equal(payload.selectedModel, "minimaxai/minimax-m2.7");
   assert.deepEqual(
     payload.managedPaths?.map((path) => path.kind),
     ["user-settings", "project-settings", "install-state"],
@@ -155,7 +149,7 @@ test("CLI supports JSON dry-run with project scope and stdin secret", async () =
   assert.doesNotMatch(stdout.text(), /gp-stdin-cli-secret/);
 });
 
-test("CLI uses the recommended model default with --yes", async () => {
+test("CLI uses the first live model default with --yes", async () => {
   const stdout = createOutput();
   const stderr = createOutput();
 
@@ -172,7 +166,7 @@ test("CLI uses the recommended model default with --yes", async () => {
   assert.equal(stderr.text(), "");
 
   const payload = JSON.parse(stdout.text()) as { selectedModel?: string };
-  assert.equal(payload.selectedModel, "qwen3-235b-a22b-instruct-2507-fp8");
+  assert.equal(payload.selectedModel, LIVE_MODELS[0].id);
 });
 
 test("CLI rejects forbidden secret and custom-provider options before execution", async () => {
@@ -192,7 +186,7 @@ test("CLI rejects forbidden secret and custom-provider options before execution"
   }
 });
 
-test("CLI rejects invalid scope and unsupported curated model keys", async () => {
+test("CLI rejects invalid scope before execution and unavailable live model after fetch", async () => {
   const invalidScopeStdout = createOutput();
   const invalidScopeStderr = createOutput();
 
@@ -211,15 +205,16 @@ test("CLI rejects invalid scope and unsupported curated model keys", async () =>
   const invalidModelStderr = createOutput();
 
   const invalidModel = await runCli(
-    ["node", "gonkagate-qwen-code", "--model", "raw/custom-model"],
+    ["node", "gonkagate-qwen-code", "--model", "raw/custom-model", "--yes"],
     {
       stdout: invalidModelStdout.stream,
       stderr: invalidModelStderr.stream,
     },
+    cliDeps(),
   );
 
-  assert.equal(invalidModel.exitCode, 2);
-  assert.match(invalidModelStderr.text(), /Unsupported curated model key/);
+  assert.equal(invalidModel.exitCode, 1);
+  assert.match(invalidModelStderr.text(), /validated_models_unavailable/);
 });
 
 test("CLI renders parse errors as JSON on stdout in JSON mode", async () => {
@@ -247,7 +242,7 @@ test("CLI renders parse errors as JSON on stdout in JSON mode", async () => {
   assert.match(payload.message ?? "", /gp-\*\*\*/);
 });
 
-test("CLI renders common runtime blockers without leaking secrets", async () => {
+test("CLI renders live model fetch failures without leaking secrets", async () => {
   const stdout = createOutput();
   const stderr = createOutput();
 
@@ -262,9 +257,7 @@ test("CLI renders common runtime blockers without leaking secrets", async () => 
         request: async () => ({
           status: 200,
           headers: {},
-          body: JSON.stringify({
-            data: [{ id: "qwen/qwen3-235b-a22b-instruct-2507-fp8" }],
-          }),
+          body: JSON.stringify({ data: [] }),
         }),
       },
     }),
@@ -272,7 +265,7 @@ test("CLI renders common runtime blockers without leaking secrets", async () => 
 
   assert.equal(result.exitCode, 1);
   assert.equal(stdout.text(), "");
-  assert.match(stderr.text(), /required_models_unavailable/);
+  assert.match(stderr.text(), /validated_models_unavailable/);
   assert.doesNotMatch(stderr.text(), /gp-cli-secret/);
 });
 

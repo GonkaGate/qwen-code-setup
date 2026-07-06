@@ -1,62 +1,41 @@
 # Model Validation
 
-This document records the validation gate for curated GonkaGate models exposed
-through `@gonkagate/qwen-code-setup`.
+This document records the live model discovery rule for
+`@gonkagate/qwen-code-setup`.
 
-## Current Supported Models
+## Source Of Truth
 
-The v1 installer must support all three GonkaGate models currently available
-for this setup flow:
+The installer has no checked-in user-facing GonkaGate model id list. After
+collecting the GonkaGate API key, it must make authenticated
+`GET https://api.gonkagate.com/v1/models` with Bearer auth.
 
-- `qwen/qwen3-235b-a22b-instruct-2507-fp8`
-- `moonshotai/Kimi-K2.6`
-- `minimaxai/minimax-m2.7`
+The OpenAI-compatible response shape is expected to contain at least:
 
-The static registry records each model with:
+```json
+{
+  "data": [{ "id": "provider/model", "name": "Optional display name" }]
+}
+```
 
-- a stable curated key
-- the GonkaGate model id
-- a display label
-- `status: "validated"`
-- validation evidence date
-- Qwen Code compatibility notes for the audited `0.18.0` baseline
-- optional Qwen `generationConfig` fragments
+The installer deduplicates returned ids, rejects malformed or empty responses
+with `validated_models_unavailable`, and uses the remaining live models for:
 
-Exactly one registry entry is marked as the recommended default for `--yes`.
-For the current set, that default is
-`qwen/qwen3-235b-a22b-instruct-2507-fp8`.
+- the interactive picker
+- `--model` validation
+- the `--yes` default, which is the first fetched model
+- `modelProviders.openai[]` writes
+- `model.name`
+- install-state managed model metadata
 
-After collecting the GonkaGate API key, the installer must make a separate
-authenticated request to `https://api.gonkagate.com/v1/models` and confirm that
-all three ids are available before showing the picker or writing Qwen Code
-settings.
+## Runtime Rule
 
-If any required id is missing, setup must fail with
-`required_models_unavailable` instead of writing a partial provider catalog.
+Only models returned by authenticated `/v1/models` for the user's key should
+appear in the picker or be accepted by `--model`.
 
-## Minimum Validation Proof
+The Qwen Code provider catalog under `modelProviders.openai[]` must include the
+live fetched model ids for that run, not a static subset. The selected
+model controls `model.name`.
 
-Before a model can be added to or removed from the supported set, record proof
-for:
-
-- GonkaGate `/v1/models` availability for an authenticated `gp-...` key
-- Qwen Code model provider selection
-- non-streaming chat completion
-- streaming chat completion if Qwen Code uses streaming for normal operation
-- tool/function calling behavior if Qwen Code requires it for agentic tasks
-- context-window assumptions
-- timeout/retry behavior
-- any provider-specific generation settings
-
-## Registry And Runtime Rule
-
-Only models with `status: "validated"` and present in the authenticated
-`/v1/models` response should appear in the end-user picker.
-
-The Qwen Code provider catalog under `modelProviders.openai[]` must include all
-three supported models, not only the selected default. The selected default
-controls `model.name`.
-
-Unsupported curated model keys and arbitrary raw model ids must fail before any
-runtime work. Extra GonkaGate `/v1/models` entries remain ignored until this
-registry and the public docs are explicitly updated.
+Adding or removing a model in the GonkaGate network must not require a
+repository change. No checked-in GonkaGate model id list may become the runtime
+source of truth.

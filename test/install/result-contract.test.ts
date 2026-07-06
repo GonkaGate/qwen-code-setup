@@ -11,13 +11,13 @@ const jsonOptions: CliOptions = {
   dryRun: false,
   verifyLive: false,
   scope: "user",
-  modelKey: "qwen3-235b-a22b-instruct-2507-fp8",
+  modelKey: "qwen/qwen3-235b-a22b-instruct-2507-fp8",
 };
 
 const baseResult = {
   runtimeImplemented: true,
   scope: "user",
-  selectedModel: "qwen3-235b-a22b-instruct-2507-fp8",
+  selectedModel: "qwen/qwen3-235b-a22b-instruct-2507-fp8",
   managedPaths: [],
   changed: false,
   warnings: [],
@@ -55,8 +55,8 @@ test("JSON result contract covers all installer status variants", () => {
       status: "blocked",
       blockers: [
         {
-          code: "required_models_unavailable",
-          message: "Missing required model ids.",
+          code: "validated_models_unavailable",
+          message: "Requested model was unavailable.",
         },
       ],
     },
@@ -86,7 +86,10 @@ test("JSON result contract covers all installer status variants", () => {
     assert.equal(payload.ok, result.ok);
     assert.equal(payload.status, result.status);
     assert.equal(payload.scope, "user");
-    assert.equal(payload.selectedModel, "qwen3-235b-a22b-instruct-2507-fp8");
+    assert.equal(
+      payload.selectedModel,
+      "qwen/qwen3-235b-a22b-instruct-2507-fp8",
+    );
     assert.deepEqual(payload.managedPaths, []);
     assert.equal(payload.changed, false);
     assert.ok(Array.isArray(payload.blockers));

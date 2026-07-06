@@ -1,5 +1,4 @@
 import { QWEN_CODE_SETUP_CONTRACT } from "../constants/contract.js";
-import type { CuratedModelKey } from "../constants/models.js";
 import type { InstallBlocker } from "./contracts/blockers.js";
 import type {
   InstallBlockedResult,
@@ -9,7 +8,6 @@ import type {
 } from "./contracts/install-flow.js";
 import type { InstallDependencies } from "./deps.js";
 import { fetchGonkagateModels } from "./gonkagate-client.js";
-import { enforceRequiredModelAvailability } from "./model-discovery.js";
 import { createSecretStoragePlan } from "./secret-storage.js";
 import { resolveGonkagateApiKey } from "./secrets.js";
 import { selectSetupModel } from "./selection.js";
@@ -49,10 +47,7 @@ export async function runPrewriteInstallFlow(
     } satisfies InstallFailedResult;
   }
 
-  const availability = enforceRequiredModelAvailability(
-    remoteModels.models.modelIds,
-  );
-  const selection = await selectSetupModel(request, deps, availability);
+  const selection = await selectSetupModel(request, deps, remoteModels.models);
 
   if (!selection.ok) {
     return blockedResult(request, [selection.blocker]);
@@ -69,7 +64,7 @@ export async function runPrewriteInstallFlow(
     status: "blocked",
     runtimeImplemented: QWEN_CODE_SETUP_CONTRACT.runtimeImplemented,
     scope: request.scope,
-    selectedModel: selection.selectedModelKey,
+    selectedModel: selection.selectedModelId,
     managedPaths: [
       {
         kind: "user-settings",
@@ -101,7 +96,7 @@ function blockedResult(
     status: "blocked",
     runtimeImplemented: QWEN_CODE_SETUP_CONTRACT.runtimeImplemented,
     scope: request.scope,
-    selectedModel: request.modelKey as CuratedModelKey | undefined,
+    selectedModel: request.modelKey,
     managedPaths: [],
     changed: false,
     blockers,

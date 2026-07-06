@@ -5,7 +5,6 @@ export const PRD_INSTALL_BLOCKER_CODES = [
   "managed_write_failed",
   "model_conflict",
   "validated_models_unavailable",
-  "required_models_unavailable",
   "secret_missing",
   "secret_shadowed_by_process_env",
   "secret_shadowed_by_project_env",

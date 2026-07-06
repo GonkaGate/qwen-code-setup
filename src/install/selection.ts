@@ -1,17 +1,7 @@
-import {
-  UnsupportedCuratedModelError,
-  getCuratedModelByKey,
-  getRecommendedDefaultModel,
-  type CuratedModelKey,
-  type CuratedModelRegistryRecord,
-} from "../constants/models.js";
 import type { InstallBlocker } from "./contracts/blockers.js";
 import { createBlocker } from "./contracts/blockers.js";
 import type { InstallDependencies } from "./deps.js";
-import type {
-  AvailableModelCatalog,
-  ModelAvailabilityResult,
-} from "./model-discovery.js";
+import type { GonkagateModel, GonkagateModelList } from "./gonkagate-client.js";
 
 export interface ModelSelectionRequest {
   readonly modelKey?: string;
@@ -21,8 +11,8 @@ export interface ModelSelectionRequest {
 export type ModelSelectionResult =
   | {
       readonly ok: true;
-      readonly selectedModel: CuratedModelRegistryRecord;
-      readonly selectedModelKey: CuratedModelKey;
+      readonly selectedModel: GonkagateModel;
+      readonly selectedModelId: string;
       readonly pickerRendered: boolean;
       readonly summary: Record<string, unknown>;
     }
@@ -35,96 +25,79 @@ export type ModelSelectionResult =
 export async function selectSetupModel(
   request: ModelSelectionRequest,
   deps: InstallDependencies,
-  availability: ModelAvailabilityResult,
+  catalog: GonkagateModelList,
 ): Promise<ModelSelectionResult> {
-  if (!availability.ok) {
-    return {
-      ok: false,
-      blocker: availability.blocker,
-      pickerRendered: false,
-    };
-  }
-
-  const catalog = availability.catalog;
-
   if (request.modelKey !== undefined) {
-    return selectExplicitModel(request.modelKey, catalog);
+    return selectExplicitModel(request.modelKey, catalog, false);
   }
 
   if (request.yes) {
-    return selectAvailableModel(getRecommendedDefaultModel(), catalog, false);
+    return selectAvailableModel(catalog.models[0], catalog, false);
   }
 
-  const selectedKey = await deps.prompts.select(
+  const selectedChoice = await deps.prompts.select(
     "GonkaGate model",
-    catalog.requiredModels.map((model) => model.key),
+    catalog.models.map((model) => formatModelChoice(model)),
+  );
+  const selectedModel = catalog.models.find(
+    (model) => formatModelChoice(model) === selectedChoice,
   );
 
-  return selectExplicitModel(selectedKey, catalog, true);
+  if (selectedModel === undefined) {
+    return unavailableSelection(selectedChoice);
+  }
+
+  return selectAvailableModel(selectedModel, catalog, true);
 }
 
 function selectExplicitModel(
-  modelKey: string,
-  catalog: AvailableModelCatalog,
+  modelId: string,
+  catalog: GonkagateModelList,
   pickerRendered = false,
 ): ModelSelectionResult {
-  try {
-    return selectAvailableModel(
-      getCuratedModelByKey(modelKey),
-      catalog,
-      pickerRendered,
-    );
-  } catch (error) {
-    if (error instanceof UnsupportedCuratedModelError) {
-      return {
-        ok: false,
-        blocker: createBlocker({
-          code: "validated_models_unavailable",
-          layer: "model-selection",
-          message: `Unsupported curated model key "${error.modelKey}".`,
-          nextAction:
-            "Choose one of the curated model keys exposed by the setup registry.",
-        }),
-        pickerRendered: false,
-      };
-    }
+  const model = catalog.models.find((candidate) => candidate.id === modelId);
 
-    throw error;
+  if (model === undefined) {
+    return unavailableSelection(modelId);
   }
+
+  return selectAvailableModel(model, catalog, pickerRendered);
 }
 
 function selectAvailableModel(
-  model: CuratedModelRegistryRecord,
-  catalog: AvailableModelCatalog,
+  model: GonkagateModel,
+  catalog: GonkagateModelList,
   pickerRendered: boolean,
 ): ModelSelectionResult {
-  if (
-    !catalog.requiredModels.some((candidate) => candidate.key === model.key)
-  ) {
-    return {
-      ok: false,
-      blocker: createBlocker({
-        code: "required_models_unavailable",
-        layer: "model-selection",
-        message:
-          "The selected curated model was not present in the authenticated model availability catalog.",
-        nextAction:
-          "Retry after GonkaGate /v1/models returns the full required model set.",
-      }),
-      pickerRendered: false,
-    };
-  }
-
   return {
     ok: true,
     selectedModel: model,
-    selectedModelKey: model.key,
+    selectedModelId: model.id,
     pickerRendered,
     summary: {
-      selectedModel: model.key,
+      selectedModel: model.id,
       selectedModelId: model.id,
-      supportedModels: catalog.requiredModels.map((candidate) => candidate.key),
-      ignoredModelIds: catalog.ignoredModelIds,
+      availableModels: catalog.modelIds,
     },
   };
+}
+
+function unavailableSelection(modelId: string): ModelSelectionResult {
+  return {
+    ok: false,
+    blocker: createBlocker({
+      code: "validated_models_unavailable",
+      layer: "model-selection",
+      message: `Requested model "${modelId}" was not returned by authenticated GonkaGate /v1/models.`,
+      nextAction:
+        "Choose one of the model ids returned by GonkaGate /v1/models.",
+    }),
+    pickerRendered: false,
+  };
+}
+
+function formatModelChoice(model: GonkagateModel): string {
+  return model.name === undefined || model.name === model.id
+    ? model.id
+    : `${model.name} (${model.id})`;
 }

@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getValidatedModels } from "../../src/constants/models.js";
 import type { ResolvedQwenPaths } from "../../src/install/paths.js";
 import { writeManagedQwenSettings } from "../../src/install/write.js";
 import { createWriteTargetConfigPlans } from "../../src/install/write-target-config.js";
@@ -8,6 +7,7 @@ import {
   createFakeInstallDependencies,
   createMemoryFileSystem,
 } from "./test-deps.js";
+import { LIVE_MODELS, UNKNOWN_LIVE_MODEL } from "./model-fixtures.js";
 
 function paths(): ResolvedQwenPaths {
   return {
@@ -32,10 +32,9 @@ test("write target plans create user settings and install state for user scope",
     deps: createFakeInstallDependencies(),
     paths: paths(),
     scope: "user",
-    selectedModelKey: "qwen3-235b-a22b-instruct-2507-fp8",
-    selectedModelId: "qwen/qwen3-235b-a22b-instruct-2507-fp8",
+    selectedModelId: UNKNOWN_LIVE_MODEL.id,
     secretValue: "gp-plan-secret",
-    models: getValidatedModels(),
+    models: [...LIVE_MODELS, UNKNOWN_LIVE_MODEL],
   });
 
   assert.equal(result.ok, true);
@@ -45,6 +44,7 @@ test("write target plans create user settings and install state for user scope",
       ["user-settings", "install-state"],
     );
     assert.match(result.plans[0].contents, /modelProviders/);
+    assert.match(result.plans[0].contents, /future\/network-model/);
     assert.match(result.plans[0].contents, /GONKAGATE_API_KEY/);
     assert.match(result.plans[1].contents, /secretStoragePolicyVersion/);
   }
@@ -55,10 +55,9 @@ test("project scope writes activation only to project settings and stores projec
     deps: createFakeInstallDependencies(),
     paths: paths(),
     scope: "project",
-    selectedModelKey: "kimi-k2.6",
     selectedModelId: "moonshotai/Kimi-K2.6",
     secretValue: "gp-project-secret",
-    models: getValidatedModels(),
+    models: LIVE_MODELS,
   });
 
   assert.equal(result.ok, true);
@@ -83,10 +82,9 @@ test("temp-home style managed write creates settings and skips unchanged rerun",
     deps,
     paths: paths(),
     scope: "user" as const,
-    selectedModelKey: "minimax-m2.7" as const,
     selectedModelId: "minimaxai/minimax-m2.7",
     secretValue: "gp-write-secret",
-    models: getValidatedModels(),
+    models: LIVE_MODELS,
   };
 
   const first = await writeManagedQwenSettings(baseInput);
@@ -115,10 +113,9 @@ test("project modelProviders block write planning before project writes", async 
     deps: createFakeInstallDependencies({ fs }),
     paths: paths(),
     scope: "project",
-    selectedModelKey: "kimi-k2.6",
     selectedModelId: "moonshotai/Kimi-K2.6",
     secretValue: "gp-project-secret",
-    models: getValidatedModels(),
+    models: LIVE_MODELS,
   });
 
   assert.equal(result.ok, false);

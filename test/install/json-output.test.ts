@@ -6,7 +6,7 @@ import type { InstallFlowResult } from "../../src/install/contracts/install-flow
 const base = {
   runtimeImplemented: true,
   scope: "user" as const,
-  selectedModel: "kimi-k2.6" as const,
+  selectedModel: "moonshotai/Kimi-K2.6",
   managedPaths: [
     {
       kind: "user-settings" as const,
@@ -20,7 +20,7 @@ const base = {
 
 const options = {
   scope: "user" as const,
-  modelKey: "kimi-k2.6" as const,
+  modelKey: "moonshotai/Kimi-K2.6",
   yes: true,
   json: true,
   apiKeyStdin: false,
@@ -62,9 +62,9 @@ test("JSON renderer emits stable fields for all installer result variants", () =
       status: "blocked",
       blockers: [
         {
-          code: "required_models_unavailable",
+          code: "validated_models_unavailable",
           message: "missing",
-          layer: "model-discovery",
+          layer: "model-selection",
         },
       ],
     },
@@ -86,7 +86,7 @@ test("JSON renderer emits stable fields for all installer result variants", () =
     assert.equal(payload.ok, result.ok);
     assert.equal(payload.status, result.status);
     assert.equal(payload.scope, "user");
-    assert.equal(payload.selectedModel, "kimi-k2.6");
+    assert.equal(payload.selectedModel, "moonshotai/Kimi-K2.6");
     assert.ok(Array.isArray(payload.managedPaths));
     assert.ok(Array.isArray(payload.blockers));
     assert.ok(Array.isArray(payload.warnings));

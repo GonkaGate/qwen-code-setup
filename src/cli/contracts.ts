@@ -1,4 +1,3 @@
-import type { CuratedModelKey } from "../constants/models.js";
 import type {
   InstallFlowRequest,
   InstallScope,
@@ -19,9 +18,7 @@ export interface CliResult {
   readonly exitCode: number;
 }
 
-export interface CliOptions extends InstallFlowRequest {
-  readonly modelKey?: CuratedModelKey;
-}
+export interface CliOptions extends InstallFlowRequest {}
 
 export type CliParseErrorCode =
   | "forbidden_option"

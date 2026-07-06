@@ -1,5 +1,4 @@
 import { QWEN_CODE_SETUP_CONTRACT } from "../constants/contract.js";
-import { getRequiredGonkagateModelIds } from "../constants/models.js";
 import type { InstallBlocker } from "./contracts/blockers.js";
 import { createBlocker } from "./contracts/blockers.js";
 import type { InstallScope } from "./contracts/install-flow.js";
@@ -21,6 +20,7 @@ export async function verifyDurableInstall(input: {
   readonly paths: ResolvedQwenPaths;
   readonly scope: InstallScope;
   readonly selectedModelId: string;
+  readonly managedModelIds: readonly string[];
 }): Promise<DurableVerificationResult> {
   const blockers: InstallBlocker[] = [];
   const userSettings = await readQwenSettings(
@@ -28,7 +28,13 @@ export async function verifyDurableInstall(input: {
     input.paths.userSettingsPath,
   );
 
-  blockers.push(...verifyUserSettings(userSettings, input.selectedModelId));
+  blockers.push(
+    ...verifyUserSettings(
+      userSettings,
+      input.selectedModelId,
+      input.managedModelIds,
+    ),
+  );
   blockers.push(
     ...(await verifyPosixPermissions(
       input.deps,
@@ -117,15 +123,16 @@ async function verifyPosixPermissions(
 function verifyUserSettings(
   settings: Record<string, unknown>,
   selectedModelId: string,
+  managedModelIds: readonly string[],
 ): InstallBlocker[] {
   const blockers: InstallBlocker[] = [];
   const providerIds = getOpenAiProviderIds(settings);
 
-  for (const requiredId of getRequiredGonkagateModelIds()) {
-    if (!providerIds.includes(requiredId)) {
+  for (const managedModelId of managedModelIds) {
+    if (!providerIds.includes(managedModelId)) {
       blockers.push(
         verificationBlocker(
-          `User settings are missing managed provider ${requiredId}.`,
+          `User settings are missing managed provider ${managedModelId}.`,
         ),
       );
     }

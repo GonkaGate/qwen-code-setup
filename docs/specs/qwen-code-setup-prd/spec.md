@@ -45,7 +45,7 @@ Expected outcome:
 - `qwen` runs with `security.auth.selectedType = "openai"`
 - the active `model.name` is a supported GonkaGate model
 - Qwen Code can resolve `GONKAGATE_API_KEY`
-- Qwen Code can switch among all three currently supported GonkaGate models
+- Qwen Code can switch among the live models returned for the user's key
 - GonkaGate settings are durable across terminal sessions
 - unrelated Qwen Code settings are preserved
 
@@ -70,9 +70,9 @@ Interactive happy path:
 4. installer asks for setup scope
 5. installer collects the GonkaGate API key through a hidden prompt
 6. installer calls GonkaGate `/v1/models` with that key
-7. installer verifies that all three required GonkaGate models are available
+7. installer verifies that all current live GonkaGate models are available
 8. installer shows the supported GonkaGate model picker
-9. installer writes managed Qwen Code user settings with all three models in
+9. installer writes managed Qwen Code user settings with the fetched models in
    the provider catalog
 10. if project scope is selected, installer writes only project activation
     settings
@@ -110,7 +110,7 @@ printf '%s' "$GONKAGATE_API_KEY" |
 - Qwen Code active model selection: `model.name`
 - Qwen Code API-key lookup key: `GONKAGATE_API_KEY`
 - transport target: OpenAI-compatible chat completions
-- v1 supports all three current GonkaGate models
+- v1 supports the live GonkaGate model catalog returned for the user's key
 - v1 fetches GonkaGate models through a separate authenticated `/v1/models`
   request after API-key collection and before rendering the picker
 - v1 writes every supported GonkaGate model into `modelProviders.openai[]`
@@ -197,7 +197,7 @@ block if project `modelProviders` would hide the user-managed provider catalog.
 The installer must represent GonkaGate through Qwen Code's `openai` auth type.
 It must not invent a separate Qwen provider family.
 
-The installer must not rely only on a static model registry. After collecting a
+The installer must not rely only on a checked-in model registry. After collecting a
 safe API key, it must call:
 
 ```http
@@ -205,7 +205,7 @@ GET https://api.gonkagate.com/v1/models
 Authorization: Bearer gp-...
 ```
 
-This is a separate model-discovery request. It must run before model selection
+This is a separate model-catalog request. It must run before model selection
 and before managed writes.
 
 The v1 required GonkaGate models are:
@@ -214,12 +214,12 @@ The v1 required GonkaGate models are:
 - `moonshotai/Kimi-K2.6`
 - `minimaxai/minimax-m2.7`
 
-If the authenticated `/v1/models` response does not include all three required
-ids, setup must block with `required_models_unavailable`. It must not silently
+If the authenticated `/v1/models` response does not include all current live
+ids, setup must block with `validated_models_unavailable`. It must not silently
 write a partial catalog. If GonkaGate returns additional models, v1 must ignore
-them until the curated registry and validation docs are explicitly updated.
+them until the live GonkaGate catalog changes.
 
-User-level managed settings must include all required models:
+User-level managed settings must include fetched models:
 
 ```json
 {
@@ -262,7 +262,7 @@ User-level managed settings must include all required models:
 }
 ```
 
-The actual `modelProviders.openai[]` catalog must include all three required
+The actual `modelProviders.openai[]` catalog must include all current live
 GonkaGate models, not only the selected default. The selected model controls
 `model.name`.
 
@@ -354,7 +354,7 @@ User scope writes:
 
 - managed `modelProviders.openai[]` entries
 - `security.auth.selectedType = "openai"`
-- `model.name = <selected curated model id>`
+- `model.name = <selected live model id>`
 - `env.GONKAGATE_API_KEY`
 - install state under `~/.gonkagate/qwen-code/install-state.json`
 
@@ -372,7 +372,7 @@ Project scope writes:
   - `env.GONKAGATE_API_KEY`
 - project settings:
   - `security.auth.selectedType = "openai"`
-  - `model.name = <selected curated model id>`
+  - `model.name = <selected live model id>`
 
 Project scope must not write:
 
@@ -399,10 +399,10 @@ not beside repository files.
 
 The public picker must show only models that are both:
 
-- present in the local curated registry with `status: "validated"`
+- returned by authenticated GonkaGate `/v1/models`
 - present in the authenticated GonkaGate `/v1/models` response
 
-The static registry defines what the installer knows how to support. The
+The authenticated response defines what the installer exposes for that run. The
 authenticated `/v1/models` response proves what this API key can actually use
 at setup time.
 
@@ -412,7 +412,7 @@ The registry must store:
 - GonkaGate model id
 - display label
 - validation status
-- recommended default marker
+- live response ordering for the `--yes` default
 - Qwen Code compatibility notes
 - optional Qwen generation config fragments
 - validation evidence date
@@ -427,8 +427,7 @@ All three must be written into Qwen Code's managed `modelProviders.openai[]`
 catalog. One model may be selected as the setup default through `model.name`,
 but model support is not limited to that default.
 
-Runtime `/v1/models` discovery is not a replacement for the curated registry;
-it is an authenticated availability check after API-key intake.
+Runtime `/v1/models` discovery is the runtime catalog source of truth.
 
 ## CLI Contract
 
@@ -436,7 +435,7 @@ Supported commands/options:
 
 - `npx @gonkagate/qwen-code-setup`
 - `--scope user|project`
-- `--model <curated-model-key>`
+- `--model <live-model-id>`
 - `--yes`
 - `--json`
 - `--api-key-stdin`
@@ -451,7 +450,7 @@ Forbidden:
 
 Interactive behavior:
 
-- show curated picker even when the validated list is small
+- show live picker even when the list is small
 - hide API-key input
 - explain whether setup is user or project scoped
 - display only redacted paths and blocker summaries
@@ -461,8 +460,7 @@ Non-interactive behavior:
 - require `--scope` or `--yes`
 - require a safe secret source unless a valid managed key already exists and the
   user explicitly allows reuse through `--yes`
-- if multiple validated models exist, require `--model` or use the recommended
-  default only with `--yes`
+- if multiple live models exist, accept `--model` by id or use the first fetched model with `--yes`
 - `--json` output must not contain raw secrets
 
 `--dry-run` must show planned writes and blockers without writing files.
@@ -497,7 +495,7 @@ Write requirements:
 - installer version
 - audited Qwen Code version used for compatibility metadata
 - selected scope
-- selected curated model key
+- selected live model id
 - managed model ids written
 - active Qwen user settings path
 - project settings path when applicable
@@ -516,10 +514,10 @@ Durable verification must prove, from locally inspectable files and audited
 Qwen Code merge rules, that:
 
 - active Qwen user settings contain all managed GonkaGate model entries
-- the last authenticated `/v1/models` check confirmed all three required model
+- the last authenticated `/v1/models` check confirmed all current live model
   ids before writes
 - `env.GONKAGATE_API_KEY` exists in user settings
-- selected scope activation points at the intended curated model
+- selected scope activation points at the intended live model
 - `security.auth.selectedType` resolves to `openai`
 - `model.name` resolves to the selected GonkaGate model
 - no locally inspectable higher-precedence settings layer disables or hides the
@@ -583,7 +581,7 @@ Important blocker classes:
 - `managed_write_failed`
 - `model_conflict`
 - `validated_models_unavailable`
-- `required_models_unavailable`
+- `validated_models_unavailable`
 - `secret_missing`
 - `secret_shadowed_by_process_env`
 - `secret_shadowed_by_project_env`
@@ -647,9 +645,9 @@ The first runtime implementation is complete only when:
 - project-scope behavior is implemented or explicitly disabled in CLI/docs
 - installer fetches GonkaGate `/v1/models` after API-key intake and before the
   model picker
-- curated model picker exposes all three required Qwen-supported GonkaGate
+- live model picker exposes the authenticated GonkaGate response
   models when the authenticated response confirms availability
-- managed provider catalog writes all three required GonkaGate models
+- managed provider catalog writes all current live GonkaGate models
 - duplicate model/provider conflicts block safely
 - durable verification is implemented
 - current-session shadowing diagnostics are implemented

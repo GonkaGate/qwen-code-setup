@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getRequiredGonkagateModelIds } from "../../src/constants/models.js";
 import type { FileSystemDeps, HttpRequest } from "../../src/install/deps.js";
 import { runPrewriteInstallFlow } from "../../src/install/prewrite-flow.js";
+import { modelsResponse } from "./model-fixtures.js";
 import {
   createFakeInstallDependencies,
   createMemoryFileSystem,
@@ -19,7 +19,7 @@ function request() {
   };
 }
 
-test("prewrite flow blocks missing required models before picker or writes", async () => {
+test("prewrite flow fails empty live model catalog before picker or writes", async () => {
   let writes = 0;
   let pickerCalls = 0;
   const memoryFs = createMemoryFileSystem();
@@ -51,9 +51,7 @@ test("prewrite flow blocks missing required models before picker or writes", asy
         request: async () => ({
           status: 200,
           headers: {},
-          body: JSON.stringify({
-            data: [{ id: "qwen/qwen3-235b-a22b-instruct-2507-fp8" }],
-          }),
+          body: JSON.stringify({ data: [] }),
         }),
       },
       prompts: {
@@ -67,8 +65,10 @@ test("prewrite flow blocks missing required models before picker or writes", asy
   );
 
   assert.equal(result.ok, false);
-  assert.equal(result.status, "blocked");
-  assert.equal(result.blockers[0]?.code, "required_models_unavailable");
+  assert.equal(result.status, "failed");
+  if (!result.ok && result.status === "failed") {
+    assert.equal(result.errorCode, "validated_models_unavailable");
+  }
   assert.equal(writes, 0);
   assert.equal(pickerCalls, 0);
 });
@@ -76,7 +76,7 @@ test("prewrite flow blocks missing required models before picker or writes", asy
 test("prewrite flow reaches runtime-not-implemented only after availability and selection", async () => {
   const requests: HttpRequest[] = [];
   const result = await runPrewriteInstallFlow(
-    { ...request(), modelKey: "kimi-k2.6" },
+    { ...request(), modelKey: "moonshotai/Kimi-K2.6" },
     createFakeInstallDependencies({
       commands: {
         run: async () => ({
@@ -97,9 +97,7 @@ test("prewrite flow reaches runtime-not-implemented only after availability and 
           return {
             status: 200,
             headers: {},
-            body: JSON.stringify({
-              data: getRequiredGonkagateModelIds().map((id) => ({ id })),
-            }),
+            body: modelsResponse(),
           };
         },
       },
@@ -108,7 +106,7 @@ test("prewrite flow reaches runtime-not-implemented only after availability and 
 
   assert.equal(result.ok, false);
   assert.equal(result.status, "blocked");
-  assert.equal(result.selectedModel, "kimi-k2.6");
+  assert.equal(result.selectedModel, "moonshotai/Kimi-K2.6");
   assert.equal(result.blockers[0]?.code, "runtime_not_implemented");
   assert.equal(result.changed, false);
   assert.equal(result.managedPaths[0]?.kind, "user-settings");

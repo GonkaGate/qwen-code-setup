@@ -52,8 +52,8 @@ test("product spec preserves Qwen-specific runtime contract", () => {
     /security\.auth\.selectedType = "openai"/,
     /envKey/,
     /`qwen auth` has been removed/,
-    /all three required GonkaGate models/,
-    /required_models_unavailable/,
+    /live GonkaGate model catalog/,
+    /validated_models_unavailable/,
     /stable version `0\.18\.0`/,
     /QWEN_CODE_SYSTEM_DEFAULTS_PATH/,
     /project `modelProviders` would hide/,
@@ -88,19 +88,17 @@ test("security docs forbid unsafe secret paths", () => {
   ]);
 });
 
-test("model validation docs require authenticated availability for all supported models", () => {
+test("model validation docs require authenticated live model discovery", () => {
   const modelValidation = readText("docs/model-validation.md");
 
   assertMatchesAll(modelValidation, [
-    /all three GonkaGate models currently available/,
+    /authenticated\s+`GET https:\/\/api\.gonkagate\.com\/v1\/models`/,
     /https:\/\/api\.gonkagate\.com\/v1\/models/,
-    /required_models_unavailable/,
+    /validated_models_unavailable/,
     /modelProviders\.openai\[\]/,
-    /qwen\/qwen3-235b-a22b-instruct-2507-fp8/,
-    /moonshotai\/Kimi-K2\.6/,
-    /minimaxai\/minimax-m2\.7/,
-    /recommended default/,
-    /Unsupported curated model keys/,
+    /first fetched model/,
+    /No checked-in GonkaGate model id list/,
+    /`--model`/,
   ]);
 });
 

@@ -1,5 +1,4 @@
 import { QWEN_CODE_SETUP_CONTRACT } from "../constants/contract.js";
-import type { CuratedModelKey } from "../constants/models.js";
 import type { InstallBlocker } from "./contracts/blockers.js";
 import type {
   InstallBlockedResult,
@@ -20,7 +19,6 @@ import {
   applyManagedWriteTransaction,
   rollbackManagedWrites,
 } from "./managed-write-transaction.js";
-import { enforceRequiredModelAvailability } from "./model-discovery.js";
 import { readQwenSettings } from "./qwen-settings.js";
 import { resolveInstallContext } from "./context.js";
 import { readManagedSecretFromSettings } from "./secret-storage.js";
@@ -68,10 +66,7 @@ export async function runInstallFlow(
     );
   }
 
-  const availability = enforceRequiredModelAvailability(
-    remoteModels.models.modelIds,
-  );
-  const selection = await selectSetupModel(request, deps, availability);
+  const selection = await selectSetupModel(request, deps, remoteModels.models);
 
   if (!selection.ok) {
     return blockedResult(request, scope.scope, [selection.blocker]);
@@ -81,10 +76,9 @@ export async function runInstallFlow(
     deps,
     paths: context.context.paths,
     scope: scope.scope,
-    selectedModelKey: selection.selectedModelKey,
-    selectedModelId: selection.selectedModel.id,
+    selectedModelId: selection.selectedModelId,
     secretValue: secret.secret.value,
-    models: availability.ok ? availability.catalog.requiredModels : [],
+    models: remoteModels.models.models,
   });
 
   if (!writePlans.ok) {
@@ -104,7 +98,7 @@ export async function runInstallFlow(
       status: "dry-run",
       runtimeImplemented: QWEN_CODE_SETUP_CONTRACT.runtimeImplemented,
       scope: scope.scope,
-      selectedModel: selection.selectedModelKey,
+      selectedModel: selection.selectedModelId,
       managedPaths: summary.managedPaths,
       changed: false,
       blockers: [],
@@ -124,7 +118,8 @@ export async function runInstallFlow(
     deps,
     paths: context.context.paths,
     scope: scope.scope,
-    selectedModelId: selection.selectedModel.id,
+    selectedModelId: selection.selectedModelId,
+    managedModelIds: remoteModels.models.modelIds,
   });
 
   if (!durableVerification.ok) {
@@ -144,7 +139,7 @@ export async function runInstallFlow(
   const live = await verifyLiveIfRequested({
     deps,
     verifyLive: request.verifyLive,
-    selectedModelId: selection.selectedModel.id,
+    selectedModelId: selection.selectedModelId,
   });
 
   if (!live.ok) {
@@ -154,7 +149,7 @@ export async function runInstallFlow(
   const base = {
     runtimeImplemented: QWEN_CODE_SETUP_CONTRACT.runtimeImplemented,
     scope: scope.scope,
-    selectedModel: selection.selectedModelKey,
+    selectedModel: selection.selectedModelId,
     managedPaths: writes.results.map((result) => ({
       kind: result.kind,
       path: result.path,
@@ -229,7 +224,7 @@ function blockedResult(
     status: "blocked",
     runtimeImplemented: QWEN_CODE_SETUP_CONTRACT.runtimeImplemented,
     scope,
-    selectedModel: request.modelKey as CuratedModelKey | undefined,
+    selectedModel: request.modelKey,
     managedPaths: [],
     changed: false,
     blockers,

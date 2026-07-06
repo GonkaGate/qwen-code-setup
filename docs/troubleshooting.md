@@ -1,27 +1,15 @@
 # Troubleshooting
 
-## Why did setup fail?
+## Why Did Setup Fail?
 
-The CLI reports a blocker code, layer, and next action. JSON mode uses the same
-stable codes without printing secrets.
+The CLI reports a blocker or error code, layer, and next action. JSON mode uses
+the same stable codes without printing secrets.
 
-## Can I use `qwen auth status` for verification?
+## Can I Use `qwen auth status` Verification?
 
-No. In the audited Qwen Code baseline, `qwen auth` is removed. The command
-itself points users toward interactive `/doctor`.
-
-The installer verifies locally inspectable Qwen settings and current-session
+No. In the audited Qwen Code baseline, `qwen auth` has been removed. The
+installer verifies locally inspectable Qwen settings and current-session
 shadowing instead.
-
-## Why not copy the OpenCode installer directly?
-
-OpenCode and Qwen Code have different config and secret semantics.
-
-OpenCode supports a provider secret binding under its config. Qwen Code's
-audited contract uses `envKey` and environment loading. For v1 this installer
-stores the durable key in user-level `settings.env.GONKAGATE_API_KEY` and keeps
-project files secret-free. Copying OpenCode's runtime would create false safety
-claims.
 
 ## Common Blockers
 
@@ -35,23 +23,18 @@ claims.
 - `model_conflict`: remove or rename an unmanaged provider entry with the same
   model id.
 - `validated_models_unavailable`: retry after GonkaGate `/v1/models` is
-  reachable and returns valid JSON.
-- `required_models_unavailable`: use a key with access to all three required
-  GonkaGate models.
+  reachable and returns at least one model with a string `id`.
 - `secret_missing`: provide `GONKAGATE_API_KEY`, `--api-key-stdin`, or run
-  interactively for a hidden prompt.
+  interactively for the hidden prompt.
 - `secret_shadowed_by_process_env`: unset or align the current shell
   `GONKAGATE_API_KEY`.
-- `secret_shadowed_by_project_env`: remove or align trusted project
-  `.qwen/.env` or `.env`.
+- `secret_shadowed_by_project_env`: remove or align trusted project `.qwen/.env`
+  or `.env`.
 - `project_modelproviders_override`: remove project `modelProviders` or use
   user scope.
-- `system_settings_override`: inspect system Qwen settings that override managed
-  user/project state.
-- `verification_incomplete`: make higher-precedence evidence readable and
-  verify permissions.
-- `live_verify_failed`: local setup is separate; inspect live Qwen/GonkaGate
-  connectivity manually.
-
-`--verify-live` is optional, can spend quota, and is not part of default setup
-success.
+- `system_settings_override`: remove conflicting system Qwen settings or verify
+  the override manually.
+- `verification_incomplete`: inspect the reported path and rerun after fixing
+  local evidence.
+- `live_verify_failed`: rerun without `--verify-live` or inspect Qwen/GonkaGate
+  network availability.

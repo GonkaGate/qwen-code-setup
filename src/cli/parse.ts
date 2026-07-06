@@ -1,10 +1,5 @@
 import { Command, CommanderError } from "commander";
 import { QWEN_CODE_SETUP_CONTRACT } from "../constants/contract.js";
-import {
-  UnsupportedCuratedModelError,
-  getCuratedModelByKey,
-  getRecommendedDefaultModel,
-} from "../constants/models.js";
 import type { CliOptions, CliParseError, CliParseResult } from "./contracts.js";
 
 const FORBIDDEN_OPTIONS = ["--api-key", "--base-url", "--model-id"] as const;
@@ -29,7 +24,10 @@ export function createCli(): Command {
     )
     .version(QWEN_CODE_SETUP_CONTRACT.packageVersion, "-v, --version")
     .option("--scope <scope>", "Planned setup scope: user or project.")
-    .option("--model <model>", "Planned curated GonkaGate model key.")
+    .option(
+      "--model <model>",
+      "GonkaGate model id from authenticated /v1/models.",
+    )
     .option("--yes", "Accept safe defaults once the runtime is implemented.")
     .option("--json", "Render machine-readable installer output.")
     .option("--api-key-stdin", "Read the GonkaGate API key from stdin.")
@@ -117,42 +115,29 @@ function normalizeCliOptions(
     };
   }
 
-  try {
-    const explicitModel =
-      rawOptions.model === undefined
-        ? undefined
-        : getCuratedModelByKey(rawOptions.model).key;
-    const defaultModel =
-      rawOptions.yes === true && explicitModel === undefined
-        ? getRecommendedDefaultModel().key
-        : undefined;
-
-    const options: CliOptions = {
-      scope: rawOptions.scope,
-      modelKey: explicitModel ?? defaultModel,
-      yes: rawOptions.yes === true,
-      json: rawOptions.json === true,
-      apiKeyStdin: rawOptions.apiKeyStdin === true,
-      dryRun: rawOptions.dryRun === true,
-      verifyLive: rawOptions.verifyLive === true,
+  if (rawOptions.model !== undefined && rawOptions.model.trim() === "") {
+    return {
+      kind: "parse-error",
+      error: {
+        code: "invalid_model",
+        option: "--model",
+        json: wantsJson,
+        message: "Model id cannot be empty.",
+      },
     };
-
-    return { kind: "parsed", options };
-  } catch (error) {
-    if (error instanceof UnsupportedCuratedModelError) {
-      return {
-        kind: "parse-error",
-        error: {
-          code: "invalid_model",
-          option: "--model",
-          json: wantsJson,
-          message: `Unsupported curated model key "${error.modelKey}".`,
-        },
-      };
-    }
-
-    throw error;
   }
+
+  const options: CliOptions = {
+    scope: rawOptions.scope,
+    modelKey: rawOptions.model,
+    yes: rawOptions.yes === true,
+    json: rawOptions.json === true,
+    apiKeyStdin: rawOptions.apiKeyStdin === true,
+    dryRun: rawOptions.dryRun === true,
+    verifyLive: rawOptions.verifyLive === true,
+  };
+
+  return { kind: "parsed", options };
 }
 
 function findForbiddenOption(args: readonly string[]): string | undefined {

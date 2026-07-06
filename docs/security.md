@@ -25,45 +25,33 @@ Allowed secret inputs:
 
 ## Qwen Code Secret Storage
 
-Qwen Code provider entries refer to an `envKey`. For v1, the durable secret
-target is user-level `settings.env.GONKAGATE_API_KEY` inside the active Qwen
-settings file:
+Qwen Code provider entries refer to `envKey`.
+
+For v1, the durable secret target is user-level
+`settings.env.GONKAGATE_API_KEY` inside the active Qwen settings file:
 
 - `~/.qwen/settings.json`, or
 - `<QWEN_HOME>/settings.json` when Qwen Code is configured to use `QWEN_HOME`
-
-The installer uses this target because Qwen Code always treats `settings.env`
-as a fallback environment source, while a separate user `.env` can be skipped
-when a trusted project `.env` exists.
 
 The secret must never be written to project `.qwen/settings.json`, project
 `.env`, or shell profiles.
 
 ## Model Discovery Request
 
-After collecting the key, the installer must make an authenticated
-`GET https://api.gonkagate.com/v1/models` request to confirm the three supported
-models are available.
+After collecting the key, the installer must make authenticated
+`GET https://api.gonkagate.com/v1/models` and use that live response as the
+user-visible model catalog.
 
-Security rules for this request:
+Security rules for the request:
 
-- pass the key only through an `Authorization: Bearer ...` header
-- never print the header or raw key
+- pass the key only through the `Authorization: Bearer ...` header
+- never print the raw header key
 - do not include the raw response in user-facing errors
-- report missing model ids through redacted diagnostics such as
-  `required_models_unavailable`
+- report invalid, empty, or unavailable live model catalogs through redacted
+  diagnostics such as `validated_models_unavailable`
 
 ## Diagnostics
 
-Do not print raw config or environment dumps if they can contain substituted
-secrets.
-
-If a verification command exposes secret-bearing output, capture it internally
-only and render a redacted summary.
-
-## Backups And Rollback
-
-Existing managed targets are backed up under
-`~/.gonkagate/qwen-code/backups/` before replacement. Project settings backups
-also stay under that user-level backup root. Failed writes or failed durable
-verification roll back prior managed writes where the filesystem permits it.
+Do not print raw config or environment dumps that contain substituted secrets.
+If verification output may contain secrets, capture it internally and render
+only a redacted summary.
